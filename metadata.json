@@ -1,0 +1,5 @@
+{
+  "name": "Target Price Evaluator",
+  "description": "An application to evaluate the target purchase price for luxury watches based on their reference number. The UI features subtle motion effects for an engaging user experience.",
+  "requestFramePermissions": []
+}

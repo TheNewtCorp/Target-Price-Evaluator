@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Target Price Evaluator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'obsidian-black': '#0E0E0E',
+              'charcoal-slate': '#1C1F24',
+              'champagne-gold': '#C8A97E',
+              'platinum-silver': '#E6E6E6',
+              'money-green': '#4CAF50',
+              'crimson-red': '#E74C3C',
+              'deep-bordeaux': '#5C2E35',
+              'arctic-blue': '#3A6073',
+            },
+            animation: {
+              'slow-pan': 'slow-pan 25s ease-in-out infinite alternate',
+              'slow-pan-delay': 'slow-pan-delay 35s ease-in-out infinite alternate',
+              'fade-in': 'fade-in 0.5s ease-out forwards',
+            },
+            keyframes: {
+              'slow-pan': {
+                '0%': { transform: 'translate(0, 0) scale(1)' },
+                '25%': { transform: 'translate(20px, -30px) scale(1.1)' },
+                '50%': { transform: 'translate(-10px, 20px) scale(0.9)' },
+                '75%': { transform: 'translate(30px, 10px) scale(1.2)' },
+                '100%': { transform: 'translate(0, 0) scale(1)' },
+              },
+              'slow-pan-delay': {
+                '0%': { transform: 'translate(0, 0) scale(1.2)' },
+                '25%': { transform: 'translate(-25px, 20px) scale(1)' },
+                '50%': { transform: 'translate(15px, -15px) scale(1.3)' },
+                '75%': { transform: 'translate(-20px, -20px) scale(1.1)' },
+                '100%': { transform: 'translate(0, 0) scale(1.2)' },
+              },
+              'fade-in': {
+                'from': { opacity: '0', transform: 'translateY(20px)' },
+                'to': { opacity: '1', transform: 'translateY(0)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "react": "https://esm.sh/react@^19.1.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-obsidian-black">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
