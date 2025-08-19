@@ -14,7 +14,6 @@ class PlaywrightChrono24Service {
   async evaluateWatch(refNumber) {
     // Create fresh browser instance for each evaluation
     let browser = null;
-    let timeoutId = null; // Timeout for browser cleanup
     let context = null;
     let page = null;
 
@@ -25,14 +24,9 @@ class PlaywrightChrono24Service {
       logger.info('🎭 Initializing fresh Playwright browser...');
 
       browser = await chromium.launch({
-        timeout: 60000, // 60 second timeout
         headless: process.env.NODE_ENV === 'production' || process.env.HEADLESS === 'true',
         args: [
           '--no-sandbox',
-          '--no-zygote',
-          '--single-process',
-          '--disable-crashpad',
-          '--memory-pressure-off',
           '--disable-setuid-sandbox',
           '--disable-blink-features=AutomationControlled',
           '--disable-features=VizDisplayCompositor',
@@ -54,14 +48,6 @@ class PlaywrightChrono24Service {
           '--disable-ipc-flooding-protection',
         ],
       });
-
-      // Set up timeout for browser cleanup to prevent memory leaks
-      timeoutId = setTimeout(async () => {
-        if (browser) {
-          logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-          await browser.close().catch(() => {});
-        }
-      }, 120000); // 2 minute timeout
 
       // Create a new context with realistic device emulation
       context = await browser.newContext({
@@ -101,14 +87,6 @@ class PlaywrightChrono24Service {
         },
       });
 
-      // Set up timeout for browser cleanup to prevent memory leaks
-      timeoutId = setTimeout(async () => {
-        if (browser) {
-          logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-          await browser.close().catch(() => {});
-        }
-      }, 120000); // 2 minute timeout
-
       // Create a new page
       page = await context.newPage();
 
@@ -122,39 +100,15 @@ class PlaywrightChrono24Service {
           get: () => [1, 2, 3, 4, 5],
         });
 
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
-
         Object.defineProperty(navigator, 'languages', {
           get: () => ['en-US', 'en'],
         });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
 
         // Enhanced headless detection countermeasures
         // Override webdriver property more thoroughly
         Object.defineProperty(navigator, 'webdriver', {
           get: () => undefined,
         });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
 
         // Mock chrome runtime for headless detection
         window.chrome = {
@@ -166,41 +120,9 @@ class PlaywrightChrono24Service {
 
         // Override screen properties to appear like real display
         Object.defineProperty(screen, 'availHeight', { value: 1040 });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
         Object.defineProperty(screen, 'availWidth', { value: 1920 });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
         Object.defineProperty(screen, 'colorDepth', { value: 24 });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
         Object.defineProperty(screen, 'pixelDepth', { value: 24 });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
 
         // Mock WebGL for headless detection resistance
         const originalGetContext = HTMLCanvasElement.prototype.getContext;
@@ -239,14 +161,6 @@ class PlaywrightChrono24Service {
           mouseY = e.clientY;
         });
 
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
-
         // Override Date to prevent timezone fingerprinting consistency
         const originalDate = Date;
         Date = class extends originalDate {
@@ -255,14 +169,6 @@ class PlaywrightChrono24Service {
           }
         };
       });
-
-      // Set up timeout for browser cleanup to prevent memory leaks
-      timeoutId = setTimeout(async () => {
-        if (browser) {
-          logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-          await browser.close().catch(() => {});
-        }
-      }, 120000); // 2 minute timeout
       logger.info('✅ Fresh browser initialized with Florida geolocation');
 
       // Navigate to valuation page
@@ -272,27 +178,11 @@ class PlaywrightChrono24Service {
         timeout: 30000,
       });
 
-      // Set up timeout for browser cleanup to prevent memory leaks
-      timeoutId = setTimeout(async () => {
-        if (browser) {
-          logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-          await browser.close().catch(() => {});
-        }
-      }, 120000); // 2 minute timeout
-
       // Handle cookie consent with fresh detection
       await this.handleCookieConsentFresh(page);
 
       // Take screenshot for debugging
       await page.screenshot({ path: 'playwright-valuation-debug.png', fullPage: true });
-
-      // Set up timeout for browser cleanup to prevent memory leaks
-      timeoutId = setTimeout(async () => {
-        if (browser) {
-          logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-          await browser.close().catch(() => {});
-        }
-      }, 120000); // 2 minute timeout
       logger.info('📸 Debug screenshot saved');
 
       // Enhanced page analysis
@@ -341,14 +231,6 @@ class PlaywrightChrono24Service {
           })),
         };
       });
-
-      // Set up timeout for browser cleanup to prevent memory leaks
-      timeoutId = setTimeout(async () => {
-        if (browser) {
-          logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-          await browser.close().catch(() => {});
-        }
-      }, 120000); // 2 minute timeout
 
       logger.info(`🔍 Page analysis: | META: "${JSON.stringify(pageAnalysis)}"`);
 
@@ -486,14 +368,6 @@ class PlaywrightChrono24Service {
           }
         });
 
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
-
         // Try to find specific min/max/average elements using the actual HTML structure
         let minPrice = null,
           maxPrice = null,
@@ -544,14 +418,6 @@ class PlaywrightChrono24Service {
               }
             }
           });
-
-          // Set up timeout for browser cleanup to prevent memory leaks
-          timeoutId = setTimeout(async () => {
-            if (browser) {
-              logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-              await browser.close().catch(() => {});
-            }
-          }, 120000); // 2 minute timeout
         }
 
         // Fallback: if structured approach didn't work, try the old method
@@ -575,14 +441,6 @@ class PlaywrightChrono24Service {
               }
             }
           });
-
-          // Set up timeout for browser cleanup to prevent memory leaks
-          timeoutId = setTimeout(async () => {
-            if (browser) {
-              logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-              await browser.close().catch(() => {});
-            }
-          }, 120000); // 2 minute timeout
         }
 
         // If we couldn't find specific labels, try to infer from all prices
@@ -601,14 +459,6 @@ class PlaywrightChrono24Service {
           rawHTML: marketSection.innerHTML,
         };
       });
-
-      // Set up timeout for browser cleanup to prevent memory leaks
-      timeoutId = setTimeout(async () => {
-        if (browser) {
-          logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-          await browser.close().catch(() => {});
-        }
-      }, 120000); // 2 minute timeout
 
       logger.info('💰 Extracted pricing data:', pricingData);
 
@@ -656,8 +506,6 @@ class PlaywrightChrono24Service {
       throw error;
     } finally {
       // Always clean up browser resources
-      // Clear timeout if still active
-      if (timeoutId) clearTimeout(timeoutId);
       try {
         if (page) {
           await page.close();
@@ -738,25 +586,9 @@ class PlaywrightChrono24Service {
 
       // Initialize fresh browser for test
       browser = await chromium.launch({
-        timeout: 60000, // 60 second timeout
         headless: process.env.NODE_ENV === 'production' || process.env.HEADLESS === 'true',
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--no-zygote',
-          '--single-process',
-          '--disable-crashpad',
-          '--memory-pressure-off',
-        ],
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
-
-      // Set up timeout for browser cleanup to prevent memory leaks
-      timeoutId = setTimeout(async () => {
-        if (browser) {
-          logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-          await browser.close().catch(() => {});
-        }
-      }, 120000); // 2 minute timeout
 
       context = await browser.newContext();
       page = await context.newPage();
@@ -765,14 +597,6 @@ class PlaywrightChrono24Service {
         waitUntil: 'domcontentloaded',
         timeout: 10000,
       });
-
-      // Set up timeout for browser cleanup to prevent memory leaks
-      timeoutId = setTimeout(async () => {
-        if (browser) {
-          logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-          await browser.close().catch(() => {});
-        }
-      }, 120000); // 2 minute timeout
 
       const title = await page.title();
 

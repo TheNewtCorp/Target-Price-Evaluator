@@ -4,13 +4,6 @@ const helmet = require('helmet');
 const path = require('path');
 require('dotenv').config();
 
-// Environment detection and setup
-const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER || process.env.PORT;
-if (isProduction && !process.env.NODE_ENV) {
-  process.env.NODE_ENV = 'production';
-  console.log('í´§ Auto-detected production environment, setting NODE_ENV=production');
-}
-
 const chrono24Service = require('./services/playwrightChrono24Service');
 const logger = require('./utils/logger');
 
@@ -156,12 +149,6 @@ process.on('SIGTERM', async () => {
 });
 
 process.on('SIGINT', async () => {
-
-process.on('SIGTERM', async () => {
-  logger.info('SIGTERM received, shutting down gracefully');
-  await chrono24Service.cleanup();
-  process.exit(0);
-});
   logger.info('SIGINT received, shutting down gracefully');
   await chrono24Service.cleanup();
   process.exit(0);

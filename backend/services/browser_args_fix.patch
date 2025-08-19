@@ -1,0 +1,5 @@
+# Add critical container-safe browser arguments
+sed -i 's/--disable-setuid-sandbox/--disable-setuid-sandbox,\n          --no-zygote,\n          --single-process,\n          --disable-crashpad,\n          --memory-pressure-off,\n          --max_old_space_size=512/' playwrightChrono24Service.js
+
+# Add browser launch timeout
+sed -i 's/headless: process.env/timeout: 60000,\n        headless: process.env/' playwrightChrono24Service.js
