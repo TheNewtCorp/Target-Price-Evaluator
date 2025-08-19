@@ -2,14 +2,12 @@ services:
   - type: web
     name: target-price-evaluator-backend
     env: docker
-    region: oregon  
+    region: oregon
     plan: starter
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3001
       - key: HEADLESS
         value: true
       - key: LOG_LEVEL
