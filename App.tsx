@@ -5,7 +5,7 @@ import ResultDisplay from './components/ResultDisplay';
 import type { EvaluationResult, ApiResponse, ApiError } from './types';
 
 // Backend API configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://target-price-evaluator.onrender.com';
 
 function App(): React.ReactNode {
   const [isLoading, setIsLoading] = useState<boolean>(false);
