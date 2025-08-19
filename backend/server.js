@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const path = require('path');
 require('dotenv').config();
 
-const chrono24Service = require('./services/chrono24Service');
+const chrono24Service = require('./services/playwrightChrono24Service');
 const logger = require('./utils/logger');
 
 const app = express();
