@@ -15,45 +15,9 @@ coverage/
 # nyc test coverage
 .nyc_output/
 
-# Grunt intermediate storage
-.grunt/
-
-# Bower dependency directory
-bower_components/
-
-# node-waf configuration
-.lock-wscript
-
-# Compiled binary addons
-build/Release/
-
 # Dependency directories
 node_modules/
 jspm_packages/
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
 
 # dotenv environment variables file
 .env
@@ -61,39 +25,6 @@ jspm_packages/
 .env.development.local
 .env.test.local
 .env.production.local
-
-# parcel-bundler cache
-.cache/
-.parcel-cache/
-
-# Next.js build output
-.next/
-
-# Nuxt.js build / generate output
-.nuxt/
-dist/
-
-# Gatsby files
-.cache/
-public/
-
-# Vuepress build output
-.vuepress/dist/
-
-# Serverless directories
-.serverless/
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test/
 
 # Temporary folders
 tmp/
@@ -111,11 +42,32 @@ Thumbs.db
 # Cookie storage
 cookies/*.json
 
-# Docker
-.dockerignore
+# Screenshots and debug files
+*.png
+playwright-valuation-debug.png
+valuation-page-debug.png
+
+# Playwright browsers (will be installed in container)
+.playwright/
+
+# Chrome cache
+chrome-cache/
+.cache/
 
 # IDE files
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
+
+# Docker
+.dockerignore
+
+# Test files (keep examples)
+test-*.js
+!test-valuation-service.js
+
+# Backup files
+*-backup.js
+*-old.js

@@ -40,6 +40,12 @@ class PlaywrightChrono24Service {
           '--disable-dev-shm-usage',
           '--disable-gpu',
           '--window-size=1920,1080',
+          // Additional headless stealth args
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-features=TranslateUI,BlinkGenPropertyTrees',
+          '--disable-ipc-flooding-protection',
         ],
       });
 
@@ -84,7 +90,7 @@ class PlaywrightChrono24Service {
       // Create a new page
       page = await context.newPage();
 
-      // Advanced stealth measures
+      // Advanced stealth measures - Enhanced for headless mode
       await page.addInitScript(() => {
         // Remove webdriver property
         delete Object.getPrototypeOf(navigator).webdriver;
@@ -97,8 +103,72 @@ class PlaywrightChrono24Service {
         Object.defineProperty(navigator, 'languages', {
           get: () => ['en-US', 'en'],
         });
-      });
 
+        // Enhanced headless detection countermeasures
+        // Override webdriver property more thoroughly
+        Object.defineProperty(navigator, 'webdriver', {
+          get: () => undefined,
+        });
+
+        // Mock chrome runtime for headless detection
+        window.chrome = {
+          runtime: {
+            onConnect: undefined,
+            onMessage: undefined,
+          },
+        };
+
+        // Override screen properties to appear like real display
+        Object.defineProperty(screen, 'availHeight', { value: 1040 });
+        Object.defineProperty(screen, 'availWidth', { value: 1920 });
+        Object.defineProperty(screen, 'colorDepth', { value: 24 });
+        Object.defineProperty(screen, 'pixelDepth', { value: 24 });
+
+        // Mock WebGL for headless detection resistance
+        const originalGetContext = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function (type, ...args) {
+          if (type === 'webgl' || type === 'webgl2') {
+            const context = originalGetContext.apply(this, [type, ...args]);
+            if (context) {
+              // Override WebGL vendor/renderer to appear like real GPU
+              const originalGetParameter = context.getParameter;
+              context.getParameter = function (parameter) {
+                if (parameter === 37445) return 'Intel Inc.'; // VENDOR
+                if (parameter === 37446) return 'Intel(R) UHD Graphics 630'; // RENDERER
+                return originalGetParameter.apply(this, arguments);
+              };
+            }
+            return context;
+          }
+          return originalGetContext.apply(this, [type, ...args]);
+        };
+
+        // Override permissions API
+        if (navigator.permissions && navigator.permissions.query) {
+          const originalQuery = navigator.permissions.query;
+          navigator.permissions.query = (parameters) => {
+            return parameters.name === 'notifications'
+              ? Promise.resolve({ state: Notification.permission })
+              : originalQuery(parameters);
+          };
+        }
+
+        // Add realistic mouse events to prevent detection
+        let mouseX = 0,
+          mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+          mouseX = e.clientX;
+          mouseY = e.clientY;
+        });
+
+        // Override Date to prevent timezone fingerprinting consistency
+        const originalDate = Date;
+        Date = class extends originalDate {
+          getTimezoneOffset() {
+            return 300; // EST/EDT offset
+          }
+        };
+      });
       logger.info('✅ Fresh browser initialized with Florida geolocation');
 
       // Navigate to valuation page

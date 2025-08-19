@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: target-price-evaluator-backend
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: npm install && npx playwright install chromium
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: HEADLESS
+        value: true
+      - key: LOG_LEVEL
+        value: info
+      - key: ENABLE_DEBUG_LOGGING
+        value: false
+      - key: MIN_DELAY_MS
+        value: 1500
+      - key: MAX_DELAY_MS
+        value: 4000
+      - key: SESSION_TIMEOUT_MS
+        value: 300000

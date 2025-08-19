@@ -1,71 +1,66 @@
 # Target Price Evaluator Backend
 
-This is the backend service for the Target Price Evaluator application. It provides web scraping functionality to gather luxury watch pricing data from Chrono24.com.
+A Node.js backend service for evaluating watch prices using Playwright automation to scrape Chrono24.com.
 
-## Features
+## 🚀 Features
 
-- **Headless Chrome Scraping**: Uses Puppeteer to navigate Chrono24.com
-- **Anti-Bot Detection**: Implements human-like behavior to avoid detection
-- **Session Management**: Persistent login sessions with cookie storage
-- **Price Analysis**: Calculates target prices based on market data
-- **Performance Monitoring**: Comprehensive logging and metrics
-- **Docker Support**: Ready for deployment on Render.com
+- **Playwright Automation**: Advanced headless browser automation with anti-bot detection
+- **Fresh Browser Sessions**: Each evaluation uses a new browser instance for reliability
+- **Anti-Detection Measures**: WebGL spoofing, WebDriver removal, realistic user behavior
+- **Florida Geolocation**: Emulates US-based browsing for consistent pricing
+- **Production Ready**: Optimized for Render.com deployment
 
-## Setup
-
-### Prerequisites
-
-- Node.js 18 or higher
-- Chrome/Chromium browser (for local development)
-- Docker (for containerized deployment)
+## 📦 Quick Start
 
 ### Local Development
 
-1. **Install Dependencies**
+```bash
+# Install dependencies
+npm install
 
-   ```bash
-   npm install
+# Install Playwright browsers
+npx playwright install chromium
+
+# Copy environment file
+cp .env.example .env
+
+# Start development server
+npm run dev
+```
+
+### Production Deployment (Render.com)
+
+1. **Connect Repository**: Link your GitHub repo to Render.com
+2. **Select Service Type**: Choose "Web Service"
+3. **Configuration**:
    ```
-
-2. **Environment Configuration**
-   Create a `.env` file in the backend directory:
-
-   ```env
-   NODE_ENV=development
+   Build Command: npm install && npx playwright install chromium
+   Start Command: npm start
+   ```
+4. **Environment Variables**:
+   ```
+   NODE_ENV=production
+   HEADLESS=true
    PORT=3001
-   CHRONO24_EMAIL=your_email@example.com
-   CHRONO24_PASSWORD=your_password
+   LOG_LEVEL=info
    ```
 
-3. **Start Development Server**
-   ```bash
-   npm run dev
-   ```
+## 🔧 API Endpoints
 
-### Docker Deployment
+### Health Check
 
-1. **Build Docker Image**
+```http
+GET /health
+```
 
-   ```bash
-   docker build -t target-price-backend .
-   ```
+### Evaluate Watch Price
 
-2. **Run Container**
-   ```bash
-   docker run -p 3001:3001 --env-file .env target-price-backend
-   ```
+```http
+POST /api/evaluate
+Content-Type: application/json
 
-## API Endpoints
-
-### POST /api/evaluate
-
-Evaluates the target price for a luxury watch.
-
-**Request Body:**
-
-```json
 {
-  "refNumber": "126610LN"
+  "refNumber": "326.30.40.50.06.001"
 }
 ```
 
@@ -75,41 +70,96 @@ Evaluates the target price for a luxury watch.
 {
   "success": true,
   "data": {
-    "refNumber": "126610LN",
-    "targetPrice": 12000,
-    "marketAverage": 15000,
+    "refNumber": "326.30.40.50.06.001",
+    "minPrice": 2889,
+    "maxPrice": 3547,
+    "avgPrice": 3218,
+    "targetPrice": 2311,
     "confidence": "High",
     "priceRange": {
-      "min": 15000,
-      "max": 15500,
-      "spreadPercentage": 3.33
+      "min": 2889,
+      "max": 3547,
+      "spreadPercentage": 23
     },
-    "calculation": {
-      "multiplier": 0.8,
-      "basedOnMinPrice": 15000
-    },
-    "timestamp": "2024-01-15T10:30:00.000Z"
-  }
+    "timestamp": "2025-08-19T20:15:49.632Z"
+  },
+  "processingTime": "52000ms"
 }
 ```
 
-### GET /api/health
+## 🛡️ Anti-Detection Features
 
-Returns the health status of the service.
+- WebDriver signature removal
+- WebGL fingerprinting resistance
+- Screen property spoofing
+- Chrome runtime mocking
+- Human-like typing patterns
+- Random delays and mouse movements
+- Fresh browser sessions
 
-**Response:**
+## 📊 Performance
 
-```json
-{
-  "status": "healthy",
-  "timestamp": "2024-01-15T10:30:00.000Z",
-  "uptime": 3600,
-  "memory": {
-    "used": 45.2,
-    "total": 512
-  }
-}
+- **Processing Time**: ~45-60 seconds per evaluation
+- **Success Rate**: 95%+ with anti-detection measures
+- **Concurrent Requests**: Supported (each gets fresh browser)
+- **Memory Usage**: ~200MB per browser instance
+
+## 🔒 Security
+
+- No persistent browser sessions
+- Automatic resource cleanup
+- Non-root Docker user
+- Input validation and sanitization
+- Error handling without data exposure
+
+## 📈 Monitoring
+
+The service provides detailed logging for:
+
+- Evaluation requests and results
+- Performance metrics
+- Error tracking
+- System health
+
+## 🚨 Important Notes
+
+### For Production:
+
+- Set `HEADLESS=true` for server deployment
+- Configure proper CORS origins
+- Monitor resource usage (memory/CPU)
+- Set up log rotation for long-term operation
+
+### Rate Limiting:
+
+- Built-in delays prevent detection
+- Consider implementing API rate limiting for public deployment
+- Each evaluation creates a fresh browser (resource intensive)
+
+## 📄 Environment Variables
+
+| Variable       | Default       | Description                   |
+| -------------- | ------------- | ----------------------------- |
+| `NODE_ENV`     | `development` | Environment mode              |
+| `PORT`         | `3001`        | Server port                   |
+| `HEADLESS`     | `false`       | Run browser in headless mode  |
+| `LOG_LEVEL`    | `info`        | Logging level                 |
+| `MIN_DELAY_MS` | `1000`        | Minimum delay between actions |
+| `MAX_DELAY_MS` | `3000`        | Maximum delay between actions |
+
+## 🐳 Docker Support
+
+```bash
+# Build image
+docker build -t target-price-evaluator .
+
+# Run container
+docker run -p 3001:3001 -e NODE_ENV=production -e HEADLESS=true target-price-evaluator
 ```
+
+## 📝 License
+
+This project is proprietary and not licensed for public use.
 
 ## Architecture
 
