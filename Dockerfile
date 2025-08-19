@@ -4,8 +4,8 @@ FROM mcr.microsoft.com/playwright:v1.54.2-jammy
 # Set working directory
 WORKDIR /usr/src/app
 
-# Copy package files first (for better caching)
-COPY package*.json ./
+# Copy backend package files first (for better caching)
+COPY backend/package*.json ./
 
 # Install dependencies
 RUN npm ci --only=production
@@ -13,8 +13,8 @@ RUN npm ci --only=production
 # Install Playwright browsers
 RUN npx playwright install chromium
 
-# Copy application code
-COPY . .
+# Copy backend application code
+COPY backend/ .
 
 # Create necessary directories
 RUN mkdir -p logs
