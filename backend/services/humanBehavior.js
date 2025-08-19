@@ -18,6 +18,10 @@ class HumanBehavior {
 
   async humanType(page, selector, text, clearFirst = true) {
     try {
+      if (!text || typeof text !== 'string') {
+        throw new Error(`Invalid text provided: ${text}`);
+      }
+
       await page.waitForSelector(selector, { timeout: 5000 });
       await page.focus(selector);
 

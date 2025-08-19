@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
 const path = require('path');
 const UserAgent = require('user-agents');
+require('dotenv').config();
 
 const cookieManager = require('./cookieManager');
 const humanBehavior = require('./humanBehavior');
@@ -124,78 +125,191 @@ class Chrono24Service {
       return true;
     }
 
-    logger.info('Attempting to log into Chrono24');
+    logger.info('Checking authentication status via collection page');
 
     try {
-      // Navigate to login page
-      await this.page.goto('https://www.chrono24.com/auth/login.htm?userRegisterOrigin=Direct', {
+      // Try to restore session from cookies first
+      const cookies = await cookieManager.loadCookies();
+      if (cookies && cookies.length > 0) {
+        await this.page.setCookie(...cookies);
+        logger.info('Loaded existing cookies');
+      }
+
+      // Follow the correct workflow: Try collection page first, only login if redirected
+      const collectionUrl =
+        'https://www.chrono24.com/user/watch-collection/product-suggestions.htm?watchCollectionItemOrigin=WatchCollection';
+
+      await this.page.goto(collectionUrl, {
         waitUntil: 'networkidle2',
         timeout: 30000,
       });
 
-      await humanBehavior.randomDelay(2000, 4000);
+      // Wait a moment for potential redirect
+      await humanBehavior.randomDelay(2000, 3000);
 
-      // Check if already logged in
-      try {
-        await this.page.waitForSelector('a[href*="/user/"]', { timeout: 5000 });
-        logger.info('Already logged in to Chrono24');
+      const currentUrl = this.page.url();
+      logger.info(`After collection page navigation, current URL: ${currentUrl}`);
+
+      // Check if we're already authenticated (stayed on collection page)
+      if (currentUrl.includes('/user/watch-collection/')) {
+        logger.info('Already authenticated - collection page loaded successfully');
         this.isLoggedIn = true;
         this.lastActivity = Date.now();
         return true;
-      } catch (e) {
-        // Not logged in, proceed with login
       }
 
-      // Wait for login form
-      await this.page.waitForSelector('#email', { timeout: 10000 });
-      await this.page.waitForSelector('#password', { timeout: 10000 });
+      // Check if we're redirected to login page
+      if (currentUrl.includes('/auth/login')) {
+        logger.info('Redirected to login page, authentication required');
 
-      // Simulate human-like typing for email
-      await humanBehavior.humanType(this.page, '#email', process.env.CHRONO24_EMAIL);
-      await humanBehavior.randomDelay(500, 1500);
+        // Handle cookie consent modal if present
+        await this.handleCookieConsent();
 
-      // Simulate human-like typing for password
-      await humanBehavior.humanType(this.page, '#password', process.env.CHRONO24_PASSWORD);
-      await humanBehavior.randomDelay(1000, 2000);
+        // Handle CAPTCHA if present
+        await this.handleTurnstileCaptcha();
 
-      // Check "Stay logged in" checkbox
-      const stayLoggedInSelector = '#userLogInPermanently';
-      try {
-        await this.page.waitForSelector(stayLoggedInSelector, { timeout: 3000 });
-        await humanBehavior.humanClick(this.page, stayLoggedInSelector);
-        await humanBehavior.randomDelay(500, 1000);
-      } catch (e) {
-        logger.warn('Could not find or check "Stay logged in" checkbox');
-      }
+        // Wait for login form
+        await this.page.waitForSelector('#email', { timeout: 10000 });
+        await this.page.waitForSelector('#password', { timeout: 10000 });
 
-      // Submit the form
-      const submitSelector = '.js-login-button';
-      await this.page.waitForSelector(submitSelector, { timeout: 5000 });
+        // Validate credentials before attempting login
+        const email = process.env.CHRONO24_EMAIL;
+        const password = process.env.CHRONO24_PASSWORD;
 
-      // Add small mouse movement before clicking login
-      await humanBehavior.randomMouseMove(this.page);
-      await humanBehavior.humanClick(this.page, submitSelector);
+        logger.info(`Email loaded: ${email ? 'Yes' : 'No'}`);
+        logger.info(`Password loaded: ${password ? 'Yes' : 'No'}`);
 
-      // Wait for login to complete
-      await humanBehavior.randomDelay(3000, 5000);
+        if (!email || !password) {
+          throw new Error('CHRONO24_EMAIL and CHRONO24_PASSWORD environment variables must be set');
+        }
 
-      // Check for successful login
-      try {
-        await this.page.waitForSelector('a[href*="/user/"]', { timeout: 10000 });
-        logger.info('Successfully logged into Chrono24');
+        // Simulate human-like typing for email
+        await humanBehavior.humanType(this.page, '#email', email);
+        await humanBehavior.randomDelay(500, 1500);
 
-        // Save cookies for future use
-        await cookieManager.saveCookies(this.page);
+        // Simulate human-like typing for password
+        await humanBehavior.humanType(this.page, '#password', password);
+        await humanBehavior.randomDelay(1000, 2000);
 
-        this.isLoggedIn = true;
-        this.lastActivity = Date.now();
-        return true;
-      } catch (e) {
-        throw new Error('Login failed - could not find user profile elements');
+        // Check "Stay logged in" checkbox
+        const stayLoggedInSelector = '#userLogInPermanently';
+        try {
+          await this.page.waitForSelector(stayLoggedInSelector, { timeout: 3000 });
+          await humanBehavior.humanClick(this.page, stayLoggedInSelector);
+          await humanBehavior.randomDelay(500, 1000);
+        } catch (e) {
+          logger.warn('Could not find or check "Stay logged in" checkbox');
+        }
+
+        // Submit the form
+        const submitSelector = '.js-login-button';
+        await this.page.waitForSelector(submitSelector, { timeout: 5000 });
+
+        // Add small mouse movement before clicking login
+        await humanBehavior.randomMouseMove(this.page);
+        await humanBehavior.humanClick(this.page, submitSelector);
+
+        // Wait for initial page response (shorter delay)
+        await humanBehavior.randomDelay(2000, 3000);
+
+        // Check if CAPTCHA appeared after form submission
+        await this.handleTurnstileCaptcha();
+
+        // Wait for login to complete and redirect back to collection page
+        await humanBehavior.randomDelay(3000, 5000);
+
+        // Check for successful login by waiting for redirect to original target
+        try {
+          await this.page.waitForFunction(
+            () => {
+              const url = window.location.href;
+              return (
+                url.includes('/user/watch-collection/') ||
+                url.includes('/user/') ||
+                url.includes('/dashboard') ||
+                url.includes('/profile') ||
+                !url.includes('/auth/login')
+              );
+            },
+            { timeout: 15000 },
+          );
+
+          // Double-check by verifying we're not still on login page
+          const finalUrl = this.page.url();
+          if (finalUrl.includes('/auth/login')) {
+            // We're still on login page, check for error messages
+            const errorMessages = await this.page.$$eval(
+              '.alert-error, .error-message, .js-error, .alert-danger',
+              (elements) => elements.map((el) => el.textContent.trim()).filter((text) => text),
+            );
+            if (errorMessages.length > 0) {
+              throw new Error(`Login failed with errors: ${errorMessages.join(', ')}`);
+            } else {
+              throw new Error('Login failed - still on login page after form submission');
+            }
+          }
+
+          logger.info('Successfully logged into Chrono24');
+
+          // Save cookies for future use
+          await cookieManager.saveCookies(this.page);
+
+          this.isLoggedIn = true;
+          this.lastActivity = Date.now();
+          return true;
+        } catch (e) {
+          // Get current URL for debugging
+          const currentUrl = this.page.url();
+          const pageTitle = await this.page.title();
+
+          // Check for specific error indicators
+          let errorDetails = '';
+          try {
+            const errorElements = await this.page.$$(
+              '.alert-error, .error-message, .js-error, .alert-danger, .captcha-error, .js-captcha-error',
+            );
+            if (errorElements.length > 0) {
+              const errors = await Promise.all(
+                errorElements.map((el) => this.page.evaluate((element) => element.textContent, el)),
+              );
+              errorDetails = ` Errors: ${errors.join(', ')}`;
+
+              // Check if it's a CAPTCHA-related error
+              const captchaKeywords = ['captcha', 'verification', 'challenge', 'robot', 'human'];
+              const hasCaptchaError = errors.some((error) =>
+                captchaKeywords.some((keyword) => error.toLowerCase().includes(keyword)),
+              );
+
+              if (hasCaptchaError) {
+                logger.warn('CAPTCHA-related error detected, retrying CAPTCHA handling...');
+                await this.handleTurnstileCaptcha();
+                await humanBehavior.randomDelay(3000, 5000);
+
+                // Check if we're now successfully logged in
+                const retryUrl = this.page.url();
+                if (!retryUrl.includes('/auth/login')) {
+                  logger.info('Successfully logged in after CAPTCHA retry');
+                  await cookieManager.saveCookies(this.page);
+                  this.isLoggedIn = true;
+                  this.lastActivity = Date.now();
+                  return true;
+                }
+              }
+            }
+          } catch (errorCheckError) {
+            // Ignore error checking errors
+          }
+
+          throw new Error(
+            `Login failed - did not redirect to expected page after login. Current URL: ${currentUrl}, Title: ${pageTitle}${errorDetails}`,
+          );
+        }
+      } else {
+        throw new Error(`Unexpected redirect: ${currentUrl}`);
       }
     } catch (error) {
-      logger.error('Login failed:', error.message);
-      throw new Error(`Login failed: ${error.message}`);
+      logger.error('Authentication failed:', error.message);
+      throw new Error(`Authentication failed: ${error.message}`);
     }
   }
 
@@ -392,6 +506,151 @@ class Chrono24Service {
       };
     } catch (error) {
       throw new Error(`Connection test failed: ${error.message}`);
+    }
+  }
+
+  async handleCookieConsent() {
+    try {
+      logger.info('Checking for cookie consent modal');
+
+      // Wait briefly for the modal to appear
+      await humanBehavior.randomDelay(1000, 2000);
+
+      // Look for the cookie consent modal
+      const consentModalSelector = '.js-modal-content, .gdpr-layer-content';
+      const acceptButtonSelector = '.js-cookie-accept-all';
+
+      const consentModal = await this.page.$(consentModalSelector);
+      if (consentModal) {
+        logger.info('Cookie consent modal detected, accepting');
+
+        // Check if the accept button is present and visible
+        const acceptButton = await this.page.$(acceptButtonSelector);
+        if (acceptButton) {
+          const isVisible = await acceptButton.isIntersectingViewport();
+          if (isVisible) {
+            // Add human-like behavior before clicking
+            await humanBehavior.randomDelay(500, 1000);
+            await humanBehavior.randomMouseMove(this.page);
+            await humanBehavior.humanClick(this.page, acceptButtonSelector);
+            logger.info('Cookie consent accepted');
+
+            // Wait for modal to disappear
+            await this.page
+              .waitForSelector(consentModalSelector, {
+                hidden: true,
+                timeout: 5000,
+              })
+              .catch(() => {
+                logger.warn('Cookie consent modal may not have closed properly');
+              });
+          } else {
+            logger.warn('Cookie consent accept button not visible');
+          }
+        } else {
+          logger.warn('Cookie consent accept button not found');
+        }
+      } else {
+        logger.info('No cookie consent modal detected');
+      }
+    } catch (error) {
+      logger.warn(`Error handling cookie consent: ${error.message}`);
+    }
+  }
+
+  async handleTurnstileCaptcha() {
+    try {
+      logger.info('Checking for Cloudflare Turnstile CAPTCHA');
+
+      // Wait briefly for CAPTCHA to load
+      await humanBehavior.randomDelay(2000, 3000);
+
+      // Look for Turnstile iframe
+      const turnstileSelectors = [
+        'iframe[src*="challenges.cloudflare.com"]',
+        'iframe[src*="turnstile"]',
+        '.cf-turnstile iframe',
+        '[data-sitekey] iframe',
+      ];
+
+      let turnstileFrame = null;
+      for (const selector of turnstileSelectors) {
+        turnstileFrame = await this.page.$(selector);
+        if (turnstileFrame) {
+          logger.info(`Found Turnstile iframe with selector: ${selector}`);
+          break;
+        }
+      }
+
+      if (!turnstileFrame) {
+        logger.info('No Turnstile CAPTCHA detected');
+        return;
+      }
+
+      logger.info('Turnstile CAPTCHA detected, attempting to solve');
+
+      // Try to interact with the Turnstile checkbox
+      try {
+        const frame = await turnstileFrame.contentFrame();
+        if (frame) {
+          // Wait for the checkbox to be available
+          await frame.waitForSelector('input[type="checkbox"], .cb-i, [role="checkbox"]', {
+            timeout: 10000,
+          });
+
+          // Add human-like delay
+          await humanBehavior.randomDelay(1000, 3000);
+
+          // Try multiple selectors for the checkbox
+          const checkboxSelectors = [
+            'input[type="checkbox"]',
+            '.cb-i',
+            '[role="checkbox"]',
+            'label',
+            '.ctp-checkbox-container',
+          ];
+
+          let clicked = false;
+          for (const selector of checkboxSelectors) {
+            try {
+              const checkbox = await frame.$(selector);
+              if (checkbox) {
+                const isVisible = await checkbox.isIntersectingViewport();
+                if (isVisible) {
+                  await checkbox.click();
+                  logger.info(`Clicked Turnstile checkbox with selector: ${selector}`);
+                  clicked = true;
+                  break;
+                }
+              }
+            } catch (e) {
+              continue;
+            }
+          }
+
+          if (clicked) {
+            // Wait for CAPTCHA to be solved
+            logger.info('Waiting for Turnstile to complete verification...');
+            await humanBehavior.randomDelay(3000, 7000);
+
+            // Check if verification completed by looking for success indicators
+            try {
+              await frame.waitForSelector('.cb-i.cb-i-m-h', { timeout: 15000 }); // success indicator
+              logger.info('Turnstile CAPTCHA appears to be solved');
+            } catch (e) {
+              logger.warn('Could not verify Turnstile completion, continuing anyway');
+            }
+          } else {
+            logger.warn('Could not click Turnstile checkbox');
+          }
+        } else {
+          logger.warn('Could not access Turnstile iframe content');
+        }
+      } catch (error) {
+        logger.warn(`Error interacting with Turnstile: ${error.message}`);
+      }
+    } catch (error) {
+      logger.warn(`Error handling Turnstile CAPTCHA: ${error.message}`);
     }
   }
 
