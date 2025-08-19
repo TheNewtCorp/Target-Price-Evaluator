@@ -8,243 +8,115 @@ const priceCalculator = require('../utils/priceCalculator');
 
 class PlaywrightChrono24Service {
   constructor() {
-    this.browser = null;
-    this.context = null;
-    this.page = null;
-    this.lastActivity = Date.now();
-  }
-
-  async initialize() {
-    if (this.browser && this.browser.isConnected()) {
-      await this.cleanup();
-    }
-
-    logger.info('🎭 Initializing Playwright with advanced stealth');
-
-    // Use Chromium with advanced anti-detection
-    this.browser = await chromium.launch({
-      headless: process.env.NODE_ENV === 'production' || process.env.HEADLESS === 'true', // Headless in production
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-blink-features=AutomationControlled',
-        '--disable-features=VizDisplayCompositor',
-        '--disable-web-security',
-        '--disable-features=TranslateUI',
-        '--disable-extensions',
-        '--disable-plugins',
-        '--disable-images', // Faster loading
-        '--no-first-run',
-        '--no-default-browser-check',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--window-size=1920,1080',
-      ],
-    });
-
-    // Create a new context with realistic device emulation
-    this.context = await this.browser.newContext({
-      // Emulate a real Windows desktop
-      viewport: { width: 1920, height: 1080 },
-      userAgent:
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
-
-      // Realistic browser settings
-      locale: 'en-US',
-      timezoneId: 'America/New_York', // Florida timezone
-
-      // Geolocation for Boca Raton, Florida
-      geolocation: {
-        latitude: 26.3683064,
-        longitude: -80.1289321,
-        accuracy: 100,
-      },
-      permissions: ['geolocation'],
-
-      // Device characteristics
-      colorScheme: 'light',
-      reducedMotion: 'no-preference',
-      forcedColors: 'none',
-
-      // Network settings
-      offline: false,
-
-      // Screen settings
-      screen: { width: 1920, height: 1080 },
-      deviceScaleFactor: 1,
-      isMobile: false,
-      hasTouch: false,
-
-      // Extra HTTP headers to appear more legitimate
-      extraHTTPHeaders: {
-        Accept:
-          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-        'Accept-Encoding': 'gzip, deflate, br, zstd',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Cache-Control': 'max-age=0',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Sec-Ch-Ua': '"Google Chrome";v="139", "Chromium";v="139", "Not;A=Brand";v="24"',
-        'Sec-Ch-Ua-Mobile': '?0',
-        'Sec-Ch-Ua-Platform': '"Windows"',
-        'Upgrade-Insecure-Requests': '1',
-      },
-    });
-
-    // Create a new page
-    this.page = await this.context.newPage();
-
-    // Advanced stealth measures
-    await this.page.addInitScript(() => {
-      // Remove webdriver property
-      delete Object.getPrototypeOf(navigator).webdriver;
-
-      // Mock chrome runtime
-      window.chrome = {
-        runtime: {
-          onConnect: undefined,
-          onMessage: undefined,
-        },
-      };
-
-      // Override plugins
-      Object.defineProperty(navigator, 'plugins', {
-        get: () => [1, 2, 3, 4, 5],
-      });
-
-      // Mock permissions API
-      const originalQuery = window.navigator.permissions?.query;
-      if (originalQuery) {
-        window.navigator.permissions.query = (parameters) =>
-          parameters.name === 'notifications'
-            ? Promise.resolve({ state: Notification.permission })
-            : originalQuery(parameters);
-      }
-
-      // Add realistic screen properties
-      Object.defineProperties(screen, {
-        availWidth: { get: () => 1920 },
-        availHeight: { get: () => 1040 },
-        width: { get: () => 1920 },
-        height: { get: () => 1080 },
-        colorDepth: { get: () => 24 },
-        pixelDepth: { get: () => 24 },
-      });
-
-      // Mock connection
-      Object.defineProperty(navigator, 'connection', {
-        get: () => ({
-          effectiveType: '4g',
-          rtt: 150,
-          downlink: 10,
-          saveData: false,
-        }),
-      });
-
-      // Mock hardwareConcurrency
-      Object.defineProperty(navigator, 'hardwareConcurrency', {
-        get: () => 8,
-      });
-
-      // Mock memory
-      Object.defineProperty(navigator, 'deviceMemory', {
-        get: () => 8,
-      });
-
-      console.log('🎭 Advanced stealth measures activated');
-    });
-
-    logger.info('✅ Playwright browser initialized with Florida geolocation');
-  }
-
-  async handleCookieConsent() {
-    try {
-      logger.info('🍪 Looking for cookie consent popup...');
-
-      // Wait for any modals to appear
-      await this.page.waitForTimeout(2000);
-
-      // Comprehensive cookie consent selectors
-      const cookieSelectors = [
-        '.js-cookie-accept-all', // Specific from HTML you provided
-        'button:has-text("OK")',
-        'button:has-text("Accept")',
-        'button:has-text("Accept all")',
-        'button:has-text("Accept All")',
-        'button:has-text("Agree")',
-        'button:has-text("Continue")',
-        '[data-test="cookie-accept"]',
-        '#cookie-consent button',
-        '.cookie-banner button',
-        '[class*="consent"] button[class*="accept"]',
-        '.wt-consent-layer-accept-all',
-      ];
-
-      let cookieHandled = false;
-
-      for (const selector of cookieSelectors) {
-        try {
-          // Wait briefly for the element
-          const element = await this.page.locator(selector).first();
-
-          if (await element.isVisible({ timeout: 1000 })) {
-            const buttonText = await element.textContent();
-            logger.info(`🍪 Found cookie consent button: "${buttonText}"`);
-
-            // Human-like interaction
-            await element.hover();
-            await this.page.waitForTimeout(200 + Math.random() * 300);
-            await element.click();
-
-            cookieHandled = true;
-            logger.info('✅ Cookie consent handled successfully');
-            break;
-          }
-        } catch (error) {
-          // Continue to next selector
-          continue;
-        }
-      }
-
-      if (!cookieHandled) {
-        logger.info('ℹ️ No cookie consent popup found or already handled');
-      }
-
-      // Wait after handling
-      await this.page.waitForTimeout(2000);
-    } catch (error) {
-      logger.warn(`Cookie consent handling failed: ${error.message}`);
-    }
+    // Remove instance variables - each evaluation uses fresh browser
   }
 
   async evaluateWatch(refNumber) {
+    // Create fresh browser instance for each evaluation
+    let browser = null;
+    let context = null;
+    let page = null;
+
     try {
-      logger.info(`🔍 Starting watch evaluation for: ${refNumber}`);
+      logger.info(`🔍 Starting fresh watch evaluation for: ${refNumber}`);
 
-      if (!this.page) {
-        await this.initialize();
-      }
+      // Initialize fresh browser for this evaluation
+      logger.info('🎭 Initializing fresh Playwright browser...');
 
-      this.lastActivity = Date.now();
+      browser = await chromium.launch({
+        headless: process.env.NODE_ENV === 'production' || process.env.HEADLESS === 'true',
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-blink-features=AutomationControlled',
+          '--disable-features=VizDisplayCompositor',
+          '--disable-web-security',
+          '--disable-features=TranslateUI',
+          '--disable-extensions',
+          '--disable-plugins',
+          '--disable-images', // Faster loading
+          '--no-first-run',
+          '--no-default-browser-check',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--window-size=1920,1080',
+        ],
+      });
+
+      // Create a new context with realistic device emulation
+      context = await browser.newContext({
+        viewport: { width: 1920, height: 1080 },
+        userAgent:
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+        locale: 'en-US',
+        timezoneId: 'America/New_York',
+        geolocation: {
+          latitude: 26.3683064,
+          longitude: -80.1289321,
+          accuracy: 100,
+        },
+        permissions: ['geolocation'],
+        colorScheme: 'light',
+        reducedMotion: 'no-preference',
+        forcedColors: 'none',
+        offline: false,
+        screen: { width: 1920, height: 1080 },
+        deviceScaleFactor: 1,
+        isMobile: false,
+        hasTouch: false,
+        extraHTTPHeaders: {
+          Accept:
+            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+          'Accept-Encoding': 'gzip, deflate, br, zstd',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Cache-Control': 'max-age=0',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
+          'Sec-Ch-Ua': '"Google Chrome";v="139", "Chromium";v="139", "Not;A=Brand";v="24"',
+          'Sec-Ch-Ua-Mobile': '?0',
+          'Sec-Ch-Ua-Platform': '"Windows"',
+          'Upgrade-Insecure-Requests': '1',
+        },
+      });
+
+      // Create a new page
+      page = await context.newPage();
+
+      // Advanced stealth measures
+      await page.addInitScript(() => {
+        // Remove webdriver property
+        delete Object.getPrototypeOf(navigator).webdriver;
+
+        // Override plugins and languages
+        Object.defineProperty(navigator, 'plugins', {
+          get: () => [1, 2, 3, 4, 5],
+        });
+
+        Object.defineProperty(navigator, 'languages', {
+          get: () => ['en-US', 'en'],
+        });
+      });
+
+      logger.info('✅ Fresh browser initialized with Florida geolocation');
 
       // Navigate to valuation page
       logger.info('📍 Navigating to valuation page...');
-      await this.page.goto('https://www.chrono24.com/info/valuation.htm', {
+      await page.goto('https://www.chrono24.com/info/valuation.htm', {
         waitUntil: 'networkidle',
         timeout: 30000,
       });
 
-      // Handle cookie consent
-      await this.handleCookieConsent();
+      // Handle cookie consent with fresh detection
+      await this.handleCookieConsentFresh(page);
 
       // Take screenshot for debugging
-      await this.page.screenshot({ path: 'playwright-valuation-debug.png', fullPage: true });
+      await page.screenshot({ path: 'playwright-valuation-debug.png', fullPage: true });
       logger.info('📸 Debug screenshot saved');
 
       // Enhanced page analysis
-      const pageAnalysis = await this.page.evaluate(() => {
+      const pageAnalysis = await page.evaluate(() => {
         // Find all possible search inputs
         const searchInputs = Array.from(
           document.querySelectorAll(
@@ -268,11 +140,11 @@ class PlaywrightChrono24Service {
             name: input.name,
             className: input.className,
             placeholder: input.placeholder,
-            visible: input.offsetParent !== null,
+            visible: input.offsetWidth > 0 && input.offsetHeight > 0,
             value: input.value,
           })),
-          forms: forms.map((form, i) => ({
-            index: i,
+          forms: forms.map((form, index) => ({
+            index,
             id: form.id,
             className: form.className,
             action: form.action,
@@ -282,66 +154,66 @@ class PlaywrightChrono24Service {
             id: select.id,
             name: select.name,
             className: select.className,
-            options: Array.from(select.options).map((opt) => ({
-              value: opt.value,
-              text: opt.text,
+            options: Array.from(select.options).map((option) => ({
+              value: option.value,
+              text: option.text,
             })),
           })),
         };
       });
 
-      logger.info('🔍 Page analysis:', JSON.stringify(pageAnalysis, null, 2));
+      logger.info(`🔍 Page analysis: | META: "${JSON.stringify(pageAnalysis)}"`);
 
-      // Look for the actual search input - try multiple approaches
-      let searchInput;
-      const searchSelectors = [
+      // Try to find the search input
+      let searchInput = null;
+      const inputSelectors = [
         '#productSearch',
         'input[name="model"]',
-        'input[placeholder*="Reference number"]',
+        'input[placeholder*="Reference"]',
         'input[placeholder*="reference"]',
+        'input[placeholder*="brand"]',
         'input[placeholder*="model"]',
-        'input[data-test="searchinput"]',
         '.wt-product-search-input',
+        '.form-control.p-r-5',
       ];
 
-      for (const selector of searchSelectors) {
+      for (const selector of inputSelectors) {
         try {
-          searchInput = this.page.locator(selector).first();
+          searchInput = page.locator(selector).first();
           if (await searchInput.isVisible({ timeout: 2000 })) {
             logger.info(`✅ Found search input with selector: ${selector}`);
             break;
           }
         } catch (error) {
-          continue;
+          // Continue to next selector
         }
       }
 
-      if (!searchInput || !(await searchInput.isVisible())) {
-        throw new Error('Search input not found on valuation page');
+      if (!searchInput || !(await searchInput.isVisible({ timeout: 5000 }))) {
+        throw new Error('Could not find reference number search input field');
       }
 
-      // Fill the search input with human-like typing
-      logger.info(`📝 Typing reference number: ${refNumber}`);
+      // Clear and fill the search input
       await searchInput.click();
-      await this.page.waitForTimeout(500);
+      await page.waitForTimeout(500);
 
       // Clear any existing value and type the reference number directly
       await searchInput.fill('');
 
       // Type the reference number character by character for better reliability
-      logger.info(`� Typing reference number: ${refNumber}`);
+      logger.info(`📝 Typing reference number: ${refNumber}`);
 
       // Use slow typing to avoid detection and ensure accuracy
       for (let i = 0; i < refNumber.length; i++) {
         await searchInput.type(refNumber[i]);
-        await this.page.waitForTimeout(50 + Math.random() * 100); // Random delay between characters
+        await page.waitForTimeout(50 + Math.random() * 100); // Random delay between characters
       }
 
       logger.info(`✅ Reference number typed: ${refNumber}`);
 
       // Wait for autocomplete dropdown
       logger.info('⏳ Waiting for search suggestions...');
-      await this.page.waitForTimeout(2000);
+      await page.waitForTimeout(2000);
 
       // Look for and click the first suggestion
       const suggestionSelectors = [
@@ -352,54 +224,42 @@ class PlaywrightChrono24Service {
         '.dropdown-menu li:first-child',
       ];
 
-      let suggestionClicked = false;
       for (const selector of suggestionSelectors) {
         try {
-          const suggestion = this.page.locator(selector).first();
-          if (await suggestion.isVisible({ timeout: 3000 })) {
+          const suggestion = page.locator(selector).first();
+          if (await suggestion.isVisible({ timeout: 2000 })) {
             logger.info(`🎯 Clicking first suggestion with selector: ${selector}`);
-            await suggestion.hover();
-            await this.page.waitForTimeout(300);
             await suggestion.click();
-            suggestionClicked = true;
+            await page.waitForTimeout(300);
             break;
           }
         } catch (error) {
+          // Try next selector
           continue;
         }
       }
 
-      if (!suggestionClicked) {
-        logger.warn('⚠️ No suggestions found, continuing anyway');
-      }
+      // Wait for page to process selection
+      await page.waitForTimeout(2000);
 
-      // Wait for selection to process
-      await this.page.waitForTimeout(2000);
-
-      // Select condition: "Pre-owned" / "Used"
+      // Select watch condition
       logger.info('🔧 Selecting watch condition...');
-      const conditionSelect = this.page.locator('#condition, select[name="condition"]').first();
-      if (await conditionSelect.isVisible({ timeout: 5000 })) {
-        await conditionSelect.selectOption({ value: 'Used' });
-        logger.info('✅ Selected "Pre-owned" condition');
-      }
+      const conditionSelect = page.locator('#condition, select[name="condition"]').first();
+      await conditionSelect.selectOption('Used');
+      logger.info('✅ Selected "Pre-owned" condition');
 
-      // Select scope of delivery: "Watch only"
+      // Select scope of delivery
       logger.info('📦 Selecting scope of delivery...');
-      const deliverySelect = this.page.locator('#scopeOfDelivery, select[name="scopeOfDelivery"]').first();
-      if (await deliverySelect.isVisible({ timeout: 5000 })) {
-        await deliverySelect.selectOption({ value: 'WatchOnly' });
-        logger.info('✅ Selected "Watch only" delivery scope');
-      }
+      const deliverySelect = page.locator('#scopeOfDelivery, select[name="scopeOfDelivery"]').first();
+      await deliverySelect.selectOption('WatchOnly');
+      logger.info('✅ Selected "Watch only" delivery scope');
 
       // Submit the form
       logger.info('🚀 Submitting valuation form...');
-      const submitButton = this.page
-        .locator('#calculateStats, input[name="calculateStats"], button[type="submit"]')
-        .first();
+      const submitButton = page.locator('#calculateStats, input[name="calculateStats"], button[type="submit"]').first();
       if (await submitButton.isVisible({ timeout: 5000 })) {
         await submitButton.hover();
-        await this.page.waitForTimeout(500);
+        await page.waitForTimeout(500);
         await submitButton.click();
         logger.info('✅ Form submitted');
       } else {
@@ -408,11 +268,11 @@ class PlaywrightChrono24Service {
 
       // Wait for results page
       logger.info('⏳ Waiting for valuation results...');
-      await this.page.waitForLoadState('networkidle');
-      await this.page.waitForTimeout(3000);
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(3000);
 
       // Extract pricing information
-      const pricingData = await this.page.evaluate(() => {
+      const pricingData = await page.evaluate(() => {
         // Look for the market value section
         const marketSection = document.querySelector('.market-value, [class*="market"], [class*="valuation"]');
 
@@ -574,76 +434,128 @@ class PlaywrightChrono24Service {
     } catch (error) {
       logger.error(`❌ Evaluation failed for ${refNumber}: ${error.message}`);
       throw error;
+    } finally {
+      // Always clean up browser resources
+      try {
+        if (page) {
+          await page.close();
+        }
+        if (context) {
+          await context.close();
+        }
+        if (browser) {
+          await browser.close();
+        }
+        logger.info('✅ Fresh browser resources cleaned up');
+      } catch (cleanupError) {
+        logger.error('Error during cleanup:', cleanupError.message);
+      }
     }
   }
 
-  async humanLikeType(element, text) {
-    for (let i = 0; i < text.length; i++) {
-      await element.type(text[i]);
-      // Vary typing speed
-      const delay = 80 + Math.random() * 120;
-      await this.page.waitForTimeout(delay);
+  async handleCookieConsentFresh(page) {
+    try {
+      logger.info('🍪 Looking for cookie consent popup...');
+      await page.waitForTimeout(2000);
+
+      // More comprehensive cookie consent selectors
+      const consentSelectors = [
+        'button:has-text("OK")',
+        'button:has-text("Accept")',
+        'button:has-text("Accept all")',
+        'button:has-text("Allow all")',
+        'button:has-text("I agree")',
+        'button[id*="accept"]',
+        'button[class*="accept"]',
+        'button[data-test*="accept"]',
+        'button[data-testid*="accept"]',
+        '.cookie-consent button',
+        '.cookie-banner button',
+        '.privacy-banner button',
+        '#cookie-consent button',
+        '[data-cookie-consent] button',
+      ];
+
+      for (const selector of consentSelectors) {
+        try {
+          const element = await page.locator(selector).first();
+          if (await element.isVisible({ timeout: 2000 })) {
+            const buttonText = await element.textContent();
+            logger.info(`🍪 Found cookie consent button: "${buttonText?.trim()}"`);
+
+            await element.hover();
+            await page.waitForTimeout(200 + Math.random() * 300);
+            await element.click();
+
+            logger.info('✅ Cookie consent handled successfully');
+
+            // Wait for popup to disappear
+            await page.waitForTimeout(2000);
+            return;
+          }
+        } catch (error) {
+          // Continue to next selector
+          continue;
+        }
+      }
+
+      logger.info('ℹ️ No cookie consent popup found or already handled');
+    } catch (error) {
+      logger.warn(`⚠️ Cookie consent handling failed: ${error.message}`);
+      // Don't throw error, continue with evaluation
     }
   }
 
   async testConnection() {
+    let browser = null;
+    let context = null;
+    let page = null;
+
     try {
-      logger.info('🧪 Testing Playwright service connection...');
+      logger.info('🧪 Testing fresh Playwright service connection...');
 
-      // Initialize if not already done
-      if (!this.browser) {
-        await this.initialize();
-      }
+      // Initialize fresh browser for test
+      browser = await chromium.launch({
+        headless: process.env.NODE_ENV === 'production' || process.env.HEADLESS === 'true',
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
 
-      // Simple test: navigate to Chrono24 homepage
-      if (!this.page) {
-        this.page = await this.context.newPage();
-      }
+      context = await browser.newContext();
+      page = await context.newPage();
 
-      await this.page.goto('https://www.chrono24.com', {
+      await page.goto('https://www.chrono24.com', {
         waitUntil: 'domcontentloaded',
         timeout: 10000,
       });
 
-      const title = await this.page.title();
+      const title = await page.title();
 
       logger.info(`✅ Connection test successful. Page title: ${title}`);
 
       return {
         status: 'connected',
-        service: 'Playwright Chrono24 Service',
+        service: 'Fresh Playwright Chrono24 Service',
         pageTitle: title,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
       logger.error(`❌ Connection test failed: ${error.message}`);
       throw new Error(`Service connection test failed: ${error.message}`);
+    } finally {
+      // Clean up test resources
+      try {
+        if (page) await page.close();
+        if (context) await context.close();
+        if (browser) await browser.close();
+      } catch (cleanupError) {
+        logger.error('Error during test cleanup:', cleanupError.message);
+      }
     }
   }
 
+  // Legacy cleanup method for compatibility
   async cleanup() {
-    try {
-      if (this.page) {
-        await this.page.close();
-        this.page = null;
-      }
-      if (this.context) {
-        await this.context.close();
-        this.context = null;
-      }
-      if (this.browser) {
-        await this.browser.close();
-        this.browser = null;
-      }
-      logger.info('✅ Playwright resources cleaned up');
-    } catch (error) {
-      logger.error('Error during cleanup:', error.message);
-    }
-  }
-
-  async isSessionValid() {
-    const timeSinceActivity = Date.now() - this.lastActivity;
-    return this.page && !this.page.isClosed() && timeSinceActivity < 300000; // 5 minutes
+    logger.info('ℹ️ Using fresh browser approach - no persistent resources to clean up');
   }
 }
 

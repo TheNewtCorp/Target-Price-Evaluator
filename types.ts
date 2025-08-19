@@ -1,7 +1,10 @@
 export interface EvaluationResult {
   refNumber: string;
   targetPrice: number;
-  marketAverage: number;
+  minPrice: number;
+  maxPrice: number;
+  avgPrice: number;
+  marketAverage?: number; // Keep for backward compatibility
   confidence: 'High' | 'Medium' | 'Low';
   priceRange: {
     min: number;

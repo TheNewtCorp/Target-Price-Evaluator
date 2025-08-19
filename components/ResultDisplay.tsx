@@ -41,22 +41,7 @@ function ResultDisplay({ result }: ResultDisplayProps): React.ReactNode {
 
         <div className='flex justify-between items-baseline'>
           <p className='text-platinum-silver/70'>Market Average:</p>
-          <p className='text-lg font-medium text-champagne-gold'>{formatCurrency(result.marketAverage)}</p>
-        </div>
-
-        <div className='flex justify-between items-baseline'>
-          <p className='text-platinum-silver/70'>Confidence:</p>
-          <p
-            className={`text-lg font-bold ${
-              result.confidence === 'High'
-                ? 'text-money-green'
-                : result.confidence === 'Medium'
-                  ? 'text-champagne-gold'
-                  : 'text-crimson-red'
-            }`}
-          >
-            {result.confidence}
-          </p>
+          <p className='text-lg font-medium text-champagne-gold'>{formatCurrency(result.avgPrice)}</p>
         </div>
 
         {/* Toggle Details Button */}
@@ -80,13 +65,6 @@ function ResultDisplay({ result }: ResultDisplayProps): React.ReactNode {
             <div className='flex justify-between'>
               <span className='text-platinum-silver/70'>Spread:</span>
               <span className='text-platinum-silver'>{result.priceRange.spreadPercentage}%</span>
-            </div>
-
-            <div className='flex justify-between'>
-              <span className='text-platinum-silver/70'>Calculation:</span>
-              <span className='text-platinum-silver'>
-                {Math.round(result.calculation.multiplier * 100)}% of minimum
-              </span>
             </div>
 
             <div className='flex justify-between'>
