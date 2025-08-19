@@ -23,11 +23,7 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === 'production'
-        ? [
-            'https://your-frontend-domain.onrender.com',
-            'https://target-price-evaluator.netlify.app',
-            'https://target-price-evaluator.vercel.app',
-          ]
+        ? ['https://target-price-evaluator.onrender.com', 'https://targetpriceeval.netlify.app']
         : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173'],
     credentials: true,
   }),
