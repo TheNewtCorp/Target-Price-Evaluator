@@ -124,7 +124,7 @@ function App(): React.ReactNode {
         </div>
 
         <footer className='absolute bottom-4 text-platinum-silver/40 text-sm'>
-          <p>Powered by Advanced Market Analytics</p>
+          <p>For Educational Purposes Only</p>
         </footer>
       </main>
     </div>
