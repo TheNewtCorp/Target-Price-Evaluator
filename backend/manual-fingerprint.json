@@ -1,0 +1,176 @@
+{
+  "navigator": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "language": "en-US",
+    "languages": ["en-US", "en"],
+    "cookieEnabled": true,
+    "doNotTrack": null,
+    "hardwareConcurrency": 20,
+    "maxTouchPoints": 0,
+    "vendor": "Google Inc.",
+    "vendorSub": "",
+    "productSub": "20030107",
+    "appName": "Netscape",
+    "appVersion": "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "webdriver": false
+  },
+  "screen": {
+    "width": 5120,
+    "height": 1440,
+    "availWidth": 5120,
+    "availHeight": 1400,
+    "colorDepth": 24,
+    "pixelDepth": 24,
+    "orientation": {
+      "angle": 0,
+      "type": "landscape-primary"
+    }
+  },
+  "window": {
+    "innerWidth": 2535,
+    "innerHeight": 1280,
+    "outerWidth": 2551,
+    "outerHeight": 1375,
+    "screenX": 2560,
+    "screenY": 16,
+    "devicePixelRatio": 1
+  },
+  "webdriver_detection": {
+    "navigator_webdriver": false,
+    "webdriver_in_window": [],
+    "webdriver_in_navigator": [],
+    "webdriver_in_document": []
+  },
+  "chrome": {
+    "runtime_present": false,
+    "runtime_onConnect": false,
+    "runtime_onMessage": false,
+    "loadTimes_present": true,
+    "csi_present": true,
+    "app_present": true
+  },
+  "plugins": {
+    "length": 5,
+    "plugins": [
+      {
+        "name": "PDF Viewer",
+        "description": "Portable Document Format",
+        "filename": "internal-pdf-viewer"
+      },
+      {
+        "name": "Chrome PDF Viewer",
+        "description": "Portable Document Format",
+        "filename": "internal-pdf-viewer"
+      },
+      {
+        "name": "Chromium PDF Viewer",
+        "description": "Portable Document Format",
+        "filename": "internal-pdf-viewer"
+      },
+      {
+        "name": "Microsoft Edge PDF Viewer",
+        "description": "Portable Document Format",
+        "filename": "internal-pdf-viewer"
+      },
+      {
+        "name": "WebKit built-in PDF",
+        "description": "Portable Document Format",
+        "filename": "internal-pdf-viewer"
+      }
+    ]
+  },
+  "webgl": {
+    "vendor": "WebKit",
+    "renderer": "WebKit WebGL",
+    "version": "WebGL 1.0 (OpenGL ES 2.0 Chromium)",
+    "shadingLanguageVersion": "WebGL GLSL ES 1.0 (OpenGL ES GLSL ES 1.0 Chromium)",
+    "extensions": [
+      "ANGLE_instanced_arrays",
+      "EXT_blend_minmax",
+      "EXT_clip_control",
+      "EXT_color_buffer_half_float",
+      "EXT_depth_clamp",
+      "EXT_disjoint_timer_query",
+      "EXT_float_blend",
+      "EXT_frag_depth",
+      "EXT_polygon_offset_clamp",
+      "EXT_shader_texture_lod",
+      "EXT_texture_compression_bptc",
+      "EXT_texture_compression_rgtc",
+      "EXT_texture_filter_anisotropic",
+      "EXT_texture_mirror_clamp_to_edge",
+      "EXT_sRGB",
+      "KHR_parallel_shader_compile",
+      "OES_element_index_uint",
+      "OES_fbo_render_mipmap",
+      "OES_standard_derivatives",
+      "OES_texture_float",
+      "OES_texture_float_linear",
+      "OES_texture_half_float",
+      "OES_texture_half_float_linear",
+      "OES_vertex_array_object",
+      "WEBGL_blend_func_extended",
+      "WEBGL_color_buffer_float",
+      "WEBGL_compressed_texture_s3tc",
+      "WEBGL_compressed_texture_s3tc_srgb",
+      "WEBGL_debug_renderer_info",
+      "WEBGL_debug_shaders",
+      "WEBGL_depth_texture",
+      "WEBGL_draw_buffers",
+      "WEBGL_lose_context",
+      "WEBGL_multi_draw",
+      "WEBGL_polygon_mode"
+    ],
+    "maxVertexAttribs": 16,
+    "maxTextureSize": 16384,
+    "maxViewportDims": {
+      "0": 32767,
+      "1": 32767
+    }
+  },
+  "canvas": {
+    "dataURL": "data:image/png;base64,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"
+  },
+  "audio": {
+    "sampleRate": 44100,
+    "maxChannelCount": 2,
+    "numberOfInputs": 1,
+    "numberOfOutputs": 0,
+    "channelCount": 2,
+    "channelCountMode": "explicit",
+    "channelInterpretation": "speakers"
+  },
+  "permissions": {
+    "api_available": true
+  },
+  "battery": {
+    "api_available": true
+  },
+  "webrtc": {
+    "RTCPeerConnection": true,
+    "mediaDevices": true
+  },
+  "automation_markers": {
+    "automation_controlled": false,
+    "phantom_marker": false,
+    "selenium_marker": false,
+    "webdriver_marker": false,
+    "callPhantom": false,
+    "spawn": false,
+    "buffer": false,
+    "emit": false
+  },
+  "performance": {
+    "navigation": {
+      "type": 0,
+      "redirectCount": 0
+    },
+    "timing": {
+      "navigationStart": 1758857403831,
+      "loadEventEnd": 1758857403972,
+      "domContentLoadedEventEnd": 1758857403875
+    }
+  },
+  "stackTrace": "Error: Test error for stack trace analysis\n    at eval (eval at runFingerprinting (file:///c%3A/Users/nlcor/dev/personal/TargetPriceEval/backend/fingerprint-test.html:8:42), <anonymous>:192:15)\n    at eval (eval at runFingerprinting (file:///c%3A/Users/nlcor/dev/personal/TargetPriceEval/backend/fingerprint-test.html:8:42), <anonymous>:198:7)\n    at runFingerprinting (file:///c%3A/Users/nlcor/dev/personal/TargetPriceEval/backend/fingerprint-test.html:33:42)\n    at HTMLButtonElement.onclick (file:///c%3A/Users/nlcor/dev/personal/TargetPriceEval/backend/fingerprint-test.html:20:68)"
+}

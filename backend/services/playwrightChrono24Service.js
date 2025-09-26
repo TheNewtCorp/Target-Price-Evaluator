@@ -24,9 +24,19 @@ class PlaywrightChrono24Service {
       // Initialize fresh browser for this evaluation
       logger.info('🎭 Initializing fresh Playwright browser...');
 
+      // Check for debug mode
+      const isDebugMode = process.env.DEBUG_MODE === 'false';
+      const isProduction = process.env.NODE_ENV === 'production';
+      const forceHeadless = process.env.HEADLESS === 'true';
+
+      logger.info(
+        `Browser config - Environment: ${isProduction ? 'Production' : 'Development'}, Debug: ${isDebugMode}, Headless: ${!isDebugMode && (isProduction || forceHeadless)}`,
+      );
+
       browser = await chromium.launch({
         timeout: 60000, // 60 second timeout
-        headless: process.env.NODE_ENV === 'production' || process.env.HEADLESS === 'true',
+        headless: !isDebugMode && (isProduction || forceHeadless),
+        slowMo: isDebugMode ? 100 : 0, // Slow down actions in debug mode
         args: [
           '--no-sandbox',
           '--no-zygote',
@@ -67,7 +77,7 @@ class PlaywrightChrono24Service {
       context = await browser.newContext({
         viewport: { width: 1920, height: 1080 },
         userAgent:
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
         locale: 'en-US',
         timezoneId: 'America/New_York',
         geolocation: {
@@ -94,7 +104,7 @@ class PlaywrightChrono24Service {
           'Sec-Fetch-Mode': 'navigate',
           'Sec-Fetch-Site': 'none',
           'Sec-Fetch-User': '?1',
-          'Sec-Ch-Ua': '"Google Chrome";v="139", "Chromium";v="139", "Not;A=Brand";v="24"',
+          'Sec-Ch-Ua': '"Google Chrome";v="140", "Chromium";v="140", "Not;A=Brand";v="24"',
           'Sec-Ch-Ua-Mobile': '?0',
           'Sec-Ch-Ua-Platform': '"Windows"',
           'Upgrade-Insecure-Requests': '1',
@@ -112,149 +122,57 @@ class PlaywrightChrono24Service {
       // Create a new page
       page = await context.newPage();
 
-      // Advanced stealth measures - Enhanced for headless mode
-      await page.addInitScript(() => {
-        // Remove webdriver property
+      // Apply stealth measures using page.evaluate (more reliable than addInitScript)
+      await page.evaluate(() => {
+        // Remove webdriver properties
         delete Object.getPrototypeOf(navigator).webdriver;
-
-        // Override plugins and languages
-        Object.defineProperty(navigator, 'plugins', {
-          get: () => [1, 2, 3, 4, 5],
-        });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
-
-        Object.defineProperty(navigator, 'languages', {
-          get: () => ['en-US', 'en'],
-        });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
-
-        // Enhanced headless detection countermeasures
-        // Override webdriver property more thoroughly
         Object.defineProperty(navigator, 'webdriver', {
           get: () => undefined,
         });
 
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
-
-        // Mock chrome runtime for headless detection
-        window.chrome = {
-          runtime: {
-            onConnect: undefined,
-            onMessage: undefined,
-          },
-        };
-
-        // Override screen properties to appear like real display
-        Object.defineProperty(screen, 'availHeight', { value: 1040 });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
-        Object.defineProperty(screen, 'availWidth', { value: 1920 });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
-        Object.defineProperty(screen, 'colorDepth', { value: 24 });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
-        Object.defineProperty(screen, 'pixelDepth', { value: 24 });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
-
-        // Mock WebGL for headless detection resistance
-        const originalGetContext = HTMLCanvasElement.prototype.getContext;
-        HTMLCanvasElement.prototype.getContext = function (type, ...args) {
-          if (type === 'webgl' || type === 'webgl2') {
-            const context = originalGetContext.apply(this, [type, ...args]);
-            if (context) {
-              // Override WebGL vendor/renderer to appear like real GPU
-              const originalGetParameter = context.getParameter;
-              context.getParameter = function (parameter) {
-                if (parameter === 37445) return 'Intel Inc.'; // VENDOR
-                if (parameter === 37446) return 'Intel(R) UHD Graphics 630'; // RENDERER
-                return originalGetParameter.apply(this, arguments);
-              };
-            }
-            return context;
-          }
-          return originalGetContext.apply(this, [type, ...args]);
-        };
-
-        // Override permissions API
-        if (navigator.permissions && navigator.permissions.query) {
-          const originalQuery = navigator.permissions.query;
-          navigator.permissions.query = (parameters) => {
-            return parameters.name === 'notifications'
-              ? Promise.resolve({ state: Notification.permission })
-              : originalQuery(parameters);
-          };
+        // Fix Chrome object - remove runtime (automation marker) but keep legitimate APIs
+        if (window.chrome && window.chrome.runtime) {
+          Object.defineProperty(window, 'chrome', {
+            get: () => ({
+              loadTimes: function () {
+                return {
+                  connectionInfo: 'http/1.1',
+                  finishDocumentLoadTime: Date.now() / 1000,
+                  finishLoadTime: Date.now() / 1000,
+                  firstPaintAfterLoadTime: 0,
+                  firstPaintTime: Date.now() / 1000,
+                  navigationType: 'Other',
+                  npnNegotiatedProtocol: 'unknown',
+                  requestTime: (Date.now() - 1000) / 1000,
+                  startLoadTime: (Date.now() - 1000) / 1000,
+                  wasAlternateProtocolAvailable: false,
+                  wasFetchedViaSpdy: false,
+                  wasNpnNegotiated: false,
+                };
+              },
+              csi: function () {
+                return {
+                  pageT: Date.now(),
+                  startE: Date.now() - 1000,
+                  tran: 15,
+                };
+              },
+              app: {},
+              // Deliberately NOT including 'runtime' - this is the key fix
+            }),
+            enumerable: true,
+            configurable: true,
+          });
         }
-
-        // Add realistic mouse events to prevent detection
-        let mouseX = 0,
-          mouseY = 0;
-        document.addEventListener('mousemove', (e) => {
-          mouseX = e.clientX;
-          mouseY = e.clientY;
-        });
-
-        // Set up timeout for browser cleanup to prevent memory leaks
-        timeoutId = setTimeout(async () => {
-          if (browser) {
-            logger.warn('⚠️ Browser timeout reached, forcing cleanup');
-            await browser.close().catch(() => {});
-          }
-        }, 120000); // 2 minute timeout
-
-        // Override Date to prevent timezone fingerprinting consistency
-        const originalDate = Date;
-        Date = class extends originalDate {
-          getTimezoneOffset() {
-            return 300; // EST/EDT offset
-          }
-        };
       });
+
+      // Set up timeout for browser cleanup to prevent memory leaks
+      timeoutId = setTimeout(async () => {
+        if (browser) {
+          logger.warn('⚠️ Browser timeout reached, forcing cleanup');
+          await browser.close().catch(() => {});
+        }
+      }, 120000); // 2 minute timeout
 
       // Set up timeout for browser cleanup to prevent memory leaks
       timeoutId = setTimeout(async () => {
@@ -268,9 +186,12 @@ class PlaywrightChrono24Service {
       // Navigate to valuation page
       logger.info('📍 Navigating to valuation page...');
       await page.goto('https://www.chrono24.com/info/valuation.htm', {
-        waitUntil: 'networkidle',
+        waitUntil: 'domcontentloaded',
         timeout: 30000,
       });
+
+      // Check for Cloudflare challenges
+      await this.checkForChallenges(page);
 
       // Set up timeout for browser cleanup to prevent memory leaks
       timeoutId = setTimeout(async () => {
@@ -456,8 +377,15 @@ class PlaywrightChrono24Service {
 
       // Wait for results page
       logger.info('⏳ Waiting for valuation results...');
-      await page.waitForLoadState('networkidle');
+
+      // Check for challenges after form submission
+      await this.checkForChallenges(page);
+
+      // Wait for content to load
       await page.waitForTimeout(3000);
+
+      // Wait for valuation content to appear
+      await this.waitForValuationContent(page);
 
       // Extract pricing information
       const pricingData = await page.evaluate(() => {
@@ -610,7 +538,7 @@ class PlaywrightChrono24Service {
         }
       }, 120000); // 2 minute timeout
 
-      logger.info('💰 Extracted pricing data:', pricingData);
+      logger.info(`💰 Extracted pricing data: | META: ${JSON.stringify(pricingData)}`);
 
       // Log individual prices for debugging
       if (pricingData.minPrice) logger.info(`📊 MIN price: $${pricingData.minPrice}`);
@@ -672,6 +600,98 @@ class PlaywrightChrono24Service {
       } catch (cleanupError) {
         logger.error('Error during cleanup:', cleanupError.message);
       }
+    }
+  }
+
+  async checkForChallenges(page) {
+    try {
+      logger.info('🛡️ Checking for anti-bot challenges...');
+
+      const challengeSelectors = [
+        'title:has-text("Just a moment")',
+        'h1:has-text("Just a moment")',
+        'div:has-text("Checking your browser")',
+        'div:has-text("Please wait")',
+        'div:has-text("Security check")',
+        'div:has-text("Cloudflare")',
+        '.cf-browser-verification',
+        '#cf-wrapper',
+        '.cf-challenge',
+      ];
+
+      for (let attempt = 0; attempt < 30; attempt++) {
+        const title = await page.title();
+
+        // Check if we're still on a challenge page
+        if (title.includes('Just a moment') || title.includes('Security check') || title.includes('Checking')) {
+          logger.warn(`⏳ Cloudflare challenge detected: "${title}" - waiting...`);
+          await page.waitForTimeout(1000);
+          continue;
+        }
+
+        // Check for challenge elements
+        let challengeFound = false;
+        for (const selector of challengeSelectors) {
+          try {
+            if (await page.locator(selector).first().isVisible({ timeout: 500 })) {
+              logger.warn(`⏳ Challenge element found: ${selector} - waiting...`);
+              challengeFound = true;
+              break;
+            }
+          } catch (error) {
+            // Element not found, continue
+          }
+        }
+
+        if (!challengeFound) {
+          logger.info('✅ No challenges detected');
+          return;
+        }
+
+        await page.waitForTimeout(1000);
+      }
+
+      logger.warn('⚠️ Challenge may still be active after 30 seconds');
+    } catch (error) {
+      logger.warn(`⚠️ Challenge detection failed: ${error.message}`);
+    }
+  }
+
+  async waitForValuationContent(page) {
+    try {
+      logger.info('🔍 Waiting for valuation content to load...');
+
+      // Wait for key elements to appear
+      const contentSelectors = [
+        '.market-value',
+        '[class*="market"]',
+        '[class*="valuation"]',
+        '.value-range',
+        'input[value="Have it appraised for free"]',
+      ];
+
+      for (let attempt = 0; attempt < 15; attempt++) {
+        for (const selector of contentSelectors) {
+          try {
+            if (await page.locator(selector).first().isVisible({ timeout: 1000 })) {
+              logger.info(`✅ Valuation content detected with selector: ${selector}`);
+              return;
+            }
+          } catch (error) {
+            // Continue checking other selectors
+          }
+        }
+
+        logger.info(`⏳ Waiting for valuation content... (attempt ${attempt + 1}/15)`);
+        await page.waitForTimeout(1000);
+      }
+
+      // If we reach here, content might not be loaded or we might be on an error page
+      const currentUrl = page.url();
+      const currentTitle = await page.title();
+      logger.warn(`⚠️ Valuation content not detected. URL: ${currentUrl}, Title: ${currentTitle}`);
+    } catch (error) {
+      logger.warn(`⚠️ Content waiting failed: ${error.message}`);
     }
   }
 

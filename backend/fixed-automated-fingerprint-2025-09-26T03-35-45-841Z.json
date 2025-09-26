@@ -1,0 +1,157 @@
+{
+  "navigator": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "language": "en-US",
+    "languages": [
+      "en-US",
+      "en"
+    ],
+    "cookieEnabled": true,
+    "doNotTrack": null,
+    "hardwareConcurrency": 20,
+    "maxTouchPoints": 0,
+    "vendor": "Google Inc.",
+    "vendorSub": "",
+    "productSub": "20030107",
+    "appName": "Netscape",
+    "appVersion": "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+  },
+  "screen": {
+    "width": 1920,
+    "height": 1080,
+    "availWidth": 1920,
+    "availHeight": 1040,
+    "colorDepth": 24,
+    "pixelDepth": 24,
+    "orientation": {
+      "angle": 0,
+      "type": "landscape-primary"
+    }
+  },
+  "window": {
+    "innerWidth": 1920,
+    "innerHeight": 1080,
+    "outerWidth": 1936,
+    "outerHeight": 1168,
+    "screenX": 10,
+    "screenY": 10,
+    "devicePixelRatio": 1
+  },
+  "webdriver_detection": {
+    "webdriver_in_window": [],
+    "webdriver_in_navigator": [],
+    "webdriver_in_document": []
+  },
+  "chrome": {
+    "runtime_present": true,
+    "runtime_onConnect": false,
+    "runtime_onMessage": false,
+    "loadTimes_present": false,
+    "csi_present": false,
+    "app_present": false
+  },
+  "plugins": {
+    "length": 5,
+    "plugins": [
+      {},
+      {},
+      {},
+      {},
+      {}
+    ]
+  },
+  "webgl": {
+    "vendor": "WebKit",
+    "renderer": "WebKit WebGL",
+    "version": "WebGL 1.0 (OpenGL ES 2.0 Chromium)",
+    "shadingLanguageVersion": "WebGL GLSL ES 1.0 (OpenGL ES GLSL ES 1.0 Chromium)",
+    "extensions": [
+      "ANGLE_instanced_arrays",
+      "EXT_blend_minmax",
+      "EXT_clip_control",
+      "EXT_color_buffer_half_float",
+      "EXT_depth_clamp",
+      "EXT_float_blend",
+      "EXT_frag_depth",
+      "EXT_polygon_offset_clamp",
+      "EXT_shader_texture_lod",
+      "EXT_texture_compression_bptc",
+      "EXT_texture_compression_rgtc",
+      "EXT_texture_filter_anisotropic",
+      "EXT_texture_mirror_clamp_to_edge",
+      "EXT_sRGB",
+      "OES_element_index_uint",
+      "OES_fbo_render_mipmap",
+      "OES_standard_derivatives",
+      "OES_texture_float",
+      "OES_texture_float_linear",
+      "OES_texture_half_float",
+      "OES_texture_half_float_linear",
+      "OES_vertex_array_object",
+      "WEBGL_color_buffer_float",
+      "WEBGL_compressed_texture_astc",
+      "WEBGL_compressed_texture_etc",
+      "WEBGL_compressed_texture_etc1",
+      "WEBGL_compressed_texture_s3tc",
+      "WEBGL_compressed_texture_s3tc_srgb",
+      "WEBGL_debug_renderer_info",
+      "WEBGL_debug_shaders",
+      "WEBGL_depth_texture",
+      "WEBGL_draw_buffers",
+      "WEBGL_lose_context",
+      "WEBGL_multi_draw",
+      "WEBGL_polygon_mode"
+    ],
+    "maxVertexAttribs": 16,
+    "maxTextureSize": 8192,
+    "maxViewportDims": {
+      "0": 8192,
+      "1": 8192
+    }
+  },
+  "canvas": {
+    "dataURL": "data:image/png;base64,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"
+  },
+  "audio": {
+    "sampleRate": 44100,
+    "maxChannelCount": 2,
+    "numberOfInputs": 1,
+    "numberOfOutputs": 0,
+    "channelCount": 2,
+    "channelCountMode": "explicit",
+    "channelInterpretation": "speakers"
+  },
+  "permissions": {
+    "api_available": true
+  },
+  "battery": {
+    "api_available": false
+  },
+  "webrtc": {
+    "RTCPeerConnection": true,
+    "mediaDevices": false
+  },
+  "automation_markers": {
+    "automation_controlled": false,
+    "phantom_marker": false,
+    "selenium_marker": false,
+    "webdriver_marker": false,
+    "callPhantom": false,
+    "spawn": false,
+    "buffer": false,
+    "emit": false
+  },
+  "performance": {
+    "navigation": {
+      "type": 0,
+      "redirectCount": 0
+    },
+    "timing": {
+      "navigationStart": 1758857745662,
+      "loadEventEnd": 1758857745667,
+      "domContentLoadedEventEnd": 1758857745667
+    }
+  },
+  "stackTrace": "Error: Test error for stack trace analysis\n    at eval (eval at evaluate (:291:30), <anonymous>:191:15)\n    at eval (eval at evaluate (:291:30), <anonymous>:197:7)\n    at eval (<anonymous>)\n    at UtilityScript.evaluate (<anonymous>:291:30)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+}

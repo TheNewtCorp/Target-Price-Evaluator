@@ -1,0 +1,63 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Browser Fingerprinting Test</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .container { max-width: 800px; margin: 0 auto; }
+            .result { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+            .copy-btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 0; }
+            .copy-btn:hover { background: #0056b3; }
+            pre { white-space: pre-wrap; font-size: 12px; max-height: 300px; overflow-y: auto; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🔍 Browser Fingerprinting Test</h1>
+            <p>This page will analyze your browser's fingerprint. Click the button below to run the test.</p>
+            
+            <button class="copy-btn" onclick="runFingerprinting()">Run Fingerprinting Test</button>
+            <button class="copy-btn" onclick="copyResults()">Copy Results to Clipboard</button>
+            
+            <div id="results"></div>
+        </div>
+
+        <script>
+            let fingerprintResults = null;
+            
+            function runFingerprinting() {
+                const script = "\n    (function() {\n      const fingerprint = {};\n      \n      // 1. Navigator Properties\n      fingerprint.navigator = {\n        userAgent: navigator.userAgent,\n        platform: navigator.platform,\n        language: navigator.language,\n        languages: navigator.languages,\n        cookieEnabled: navigator.cookieEnabled,\n        doNotTrack: navigator.doNotTrack,\n        hardwareConcurrency: navigator.hardwareConcurrency,\n        maxTouchPoints: navigator.maxTouchPoints,\n        vendor: navigator.vendor,\n        vendorSub: navigator.vendorSub,\n        productSub: navigator.productSub,\n        appName: navigator.appName,\n        appVersion: navigator.appVersion,\n        buildID: navigator.buildID,\n        oscpu: navigator.oscpu,\n        webdriver: navigator.webdriver\n      };\n\n      // 2. Screen Properties\n      fingerprint.screen = {\n        width: screen.width,\n        height: screen.height,\n        availWidth: screen.availWidth,\n        availHeight: screen.availHeight,\n        colorDepth: screen.colorDepth,\n        pixelDepth: screen.pixelDepth,\n        orientation: screen.orientation ? {\n          angle: screen.orientation.angle,\n          type: screen.orientation.type\n        } : null\n      };\n\n      // 3. Window Properties\n      fingerprint.window = {\n        innerWidth: window.innerWidth,\n        innerHeight: window.innerHeight,\n        outerWidth: window.outerWidth,\n        outerHeight: window.outerHeight,\n        screenX: window.screenX,\n        screenY: window.screenY,\n        devicePixelRatio: window.devicePixelRatio\n      };\n\n      // 4. WebDriver Detection\n      fingerprint.webdriver_detection = {\n        navigator_webdriver: navigator.webdriver,\n        window_webdriver: window.webdriver,\n        document_webdriver: document.webdriver,\n        navigator_selenium: navigator.selenium,\n        window_selenium: window.selenium,\n        document_selenium: document.selenium,\n        webdriver_in_window: Object.keys(window).filter(key => key.includes('webdriver')),\n        webdriver_in_navigator: Object.keys(navigator).filter(key => key.includes('webdriver')),\n        webdriver_in_document: Object.keys(document).filter(key => key.includes('webdriver'))\n      };\n\n      // 5. Chrome Runtime Detection\n      fingerprint.chrome = {\n        runtime_present: !!(window.chrome && window.chrome.runtime),\n        runtime_onConnect: !!(window.chrome && window.chrome.runtime && window.chrome.runtime.onConnect),\n        runtime_onMessage: !!(window.chrome && window.chrome.runtime && window.chrome.runtime.onMessage),\n        loadTimes_present: !!(window.chrome && window.chrome.loadTimes),\n        csi_present: !!(window.chrome && window.chrome.csi),\n        app_present: !!(window.chrome && window.chrome.app)\n      };\n\n      // 6. Plugin Detection\n      fingerprint.plugins = {\n        length: navigator.plugins.length,\n        plugins: Array.from(navigator.plugins).map(plugin => ({\n          name: plugin.name,\n          description: plugin.description,\n          filename: plugin.filename\n        }))\n      };\n\n      // 7. WebGL Fingerprinting\n      try {\n        const canvas = document.createElement('canvas');\n        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');\n        if (gl) {\n          fingerprint.webgl = {\n            vendor: gl.getParameter(gl.VENDOR),\n            renderer: gl.getParameter(gl.RENDERER),\n            version: gl.getParameter(gl.VERSION),\n            shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),\n            extensions: gl.getSupportedExtensions(),\n            maxVertexAttribs: gl.getParameter(gl.MAX_VERTEX_ATTRIBS),\n            maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),\n            maxViewportDims: gl.getParameter(gl.MAX_VIEWPORT_DIMS)\n          };\n        }\n      } catch (e) {\n        fingerprint.webgl = { error: e.message };\n      }\n\n      // 8. Canvas Fingerprinting\n      try {\n        const canvas = document.createElement('canvas');\n        const ctx = canvas.getContext('2d');\n        ctx.textBaseline = 'top';\n        ctx.font = '14px Arial';\n        ctx.fillText('Browser fingerprint test 🔍', 2, 2);\n        fingerprint.canvas = {\n          dataURL: canvas.toDataURL()\n        };\n      } catch (e) {\n        fingerprint.canvas = { error: e.message };\n      }\n\n      // 9. Audio Context Fingerprinting\n      try {\n        const audioContext = new (window.AudioContext || window.webkitAudioContext)();\n        const oscillator = audioContext.createOscillator();\n        const analyser = audioContext.createAnalyser();\n        const gainNode = audioContext.createGain();\n        \n        oscillator.connect(analyser);\n        analyser.connect(gainNode);\n        gainNode.connect(audioContext.destination);\n        \n        fingerprint.audio = {\n          sampleRate: audioContext.sampleRate,\n          maxChannelCount: audioContext.destination.maxChannelCount,\n          numberOfInputs: audioContext.destination.numberOfInputs,\n          numberOfOutputs: audioContext.destination.numberOfOutputs,\n          channelCount: audioContext.destination.channelCount,\n          channelCountMode: audioContext.destination.channelCountMode,\n          channelInterpretation: audioContext.destination.channelInterpretation\n        };\n        \n        audioContext.close();\n      } catch (e) {\n        fingerprint.audio = { error: e.message };\n      }\n\n      // 10. Permissions API\n      fingerprint.permissions = {};\n      if (navigator.permissions && navigator.permissions.query) {\n        fingerprint.permissions.api_available = true;\n      } else {\n        fingerprint.permissions.api_available = false;\n      }\n\n      // 11. Battery API\n      fingerprint.battery = {};\n      if (navigator.getBattery) {\n        fingerprint.battery.api_available = true;\n      } else {\n        fingerprint.battery.api_available = false;\n      }\n\n      // 12. WebRTC Detection\n      fingerprint.webrtc = {\n        RTCPeerConnection: !!(window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection),\n        mediaDevices: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)\n      };\n\n      // 13. Automation Detection Markers\n      fingerprint.automation_markers = {\n        automation_controlled: document.querySelector('[automation-controlled]') !== null,\n        phantom_marker: !!(window.phantom || window._phantom),\n        selenium_marker: !!(window.selenium || document.selenium),\n        webdriver_marker: !!(window.webdriver || document.webdriver || navigator.webdriver),\n        callPhantom: typeof window.callPhantom === 'function',\n        spawn: typeof window.spawn === 'function',\n        buffer: typeof window.Buffer === 'function',\n        emit: typeof window.emit === 'function'\n      };\n\n      // 14. Performance & Timing\n      fingerprint.performance = {\n        navigation: performance.navigation ? {\n          type: performance.navigation.type,\n          redirectCount: performance.navigation.redirectCount\n        } : null,\n        timing: performance.timing ? {\n          navigationStart: performance.timing.navigationStart,\n          loadEventEnd: performance.timing.loadEventEnd,\n          domContentLoadedEventEnd: performance.timing.domContentLoadedEventEnd\n        } : null\n      };\n\n      // 15. Error Stack Traces (can reveal automation)\n      try {\n        throw new Error('Test error for stack trace analysis');\n      } catch (e) {\n        fingerprint.stackTrace = e.stack;\n      }\n\n      return fingerprint;\n    })();\n    ";
+                
+                try {
+                    fingerprintResults = eval(script);
+                    displayResults(fingerprintResults);
+                } catch (error) {
+                    document.getElementById('results').innerHTML = '<div class="result"><h3>Error</h3><pre>' + error.message + '</pre></div>';
+                }
+            }
+            
+            function displayResults(fingerprint) {
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '<div class="result"><h3>Browser Fingerprint Results</h3><pre>' + 
+                    JSON.stringify(fingerprint, null, 2) + '</pre></div>';
+            }
+            
+            function copyResults() {
+                if (fingerprintResults) {
+                    navigator.clipboard.writeText(JSON.stringify(fingerprintResults, null, 2)).then(() => {
+                        alert('Results copied to clipboard!');
+                    });
+                } else {
+                    alert('Please run the fingerprinting test first!');
+                }
+            }
+            
+            // Auto-run on page load
+            window.onload = function() {
+                runFingerprinting();
+            };
+        </script>
+    </body>
+    </html>
+    
