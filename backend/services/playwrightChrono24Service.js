@@ -29,12 +29,12 @@ class PlaywrightChrono24Service {
       const isProduction = process.env.NODE_ENV === 'production';
       const forceHeadless = process.env.HEADLESS === 'true';
 
+      // Enhanced headless stealth for production environments
+      const shouldRunHeadless = (isProduction && !process.env.FORCE_HEADFUL) || forceHeadless;
+
       logger.info(
         `Browser config - Environment: ${isProduction ? 'Production' : 'Development'}, Debug: ${isDebugMode}, Headless: ${shouldRunHeadless}, Enhanced Stealth: ${shouldRunHeadless ? 'Enabled' : 'Basic'}`,
       );
-
-      // Enhanced headless stealth for production environments
-      const shouldRunHeadless = (isProduction && !process.env.FORCE_HEADFUL) || forceHeadless;
 
       browser = await chromium.launch({
         timeout: 60000, // 60 second timeout
@@ -779,13 +779,21 @@ class PlaywrightChrono24Service {
       logger.info('🍪 Looking for cookie consent popup...');
       await page.waitForTimeout(2000);
 
-      // More comprehensive cookie consent selectors
+      // Enhanced cookie consent selectors targeting GDPR modal specifically
       const consentSelectors = [
+        // GDPR specific selectors from the error logs
+        '.gdpr-layer button:has-text("OK")',
+        '.gdpr-layer button:has-text("Accept")',
+        '.modal.gdpr-layer button',
+        'dialog.gdpr-layer button',
+        
+        // Generic selectors
         'button:has-text("OK")',
         'button:has-text("Accept")',
         'button:has-text("Accept all")',
         'button:has-text("Allow all")',
         'button:has-text("I agree")',
+        'button:has-text("Manage Cookies")',
         'button[id*="accept"]',
         'button[class*="accept"]',
         'button[data-test*="accept"]',
@@ -795,28 +803,66 @@ class PlaywrightChrono24Service {
         '.privacy-banner button',
         '#cookie-consent button',
         '[data-cookie-consent] button',
+        
+        // Modal and dialog selectors
+        '.modal button',
+        'dialog button',
+        '.js-modal-content button',
       ];
 
-      for (const selector of consentSelectors) {
-        try {
-          const element = await page.locator(selector).first();
-          if (await element.isVisible({ timeout: 2000 })) {
-            const buttonText = await element.textContent();
-            logger.info(`🍪 Found cookie consent button: "${buttonText?.trim()}"`);
+      // Try multiple rounds of consent handling
+      for (let round = 0; round < 3; round++) {
+        logger.info(`🍪 Cookie consent round ${round + 1}/3`);
+        
+        let consentHandled = false;
+        for (const selector of consentSelectors) {
+          try {
+            const element = await page.locator(selector).first();
+            if (await element.isVisible({ timeout: 1000 })) {
+              const buttonText = await element.textContent();
+              logger.info(`🍪 Found cookie consent button: "${buttonText?.trim()}"`);
 
-            await element.hover();
-            await page.waitForTimeout(200 + Math.random() * 300);
-            await element.click();
+              await element.hover();
+              await page.waitForTimeout(200 + Math.random() * 300);
+              await element.click();
 
-            logger.info('✅ Cookie consent handled successfully');
+              logger.info('✅ Cookie consent button clicked');
+              consentHandled = true;
 
-            // Wait for popup to disappear
-            await page.waitForTimeout(2000);
-            return;
+              // Wait for popup to disappear
+              await page.waitForTimeout(2000);
+              break;
+            }
+          } catch (error) {
+            // Continue to next selector
+            continue;
           }
-        } catch (error) {
-          // Continue to next selector
-          continue;
+        }
+        
+        if (consentHandled) {
+          // Check if any modals are still blocking interaction
+          try {
+            const blockingModal = await page.locator('.modal, dialog, .gdpr-layer').first();
+            if (await blockingModal.isVisible({ timeout: 1000 })) {
+              logger.info('🍪 Modal still present, trying to close...');
+              
+              // Try pressing Escape
+              await page.keyboard.press('Escape');
+              await page.waitForTimeout(500);
+              
+              // Try clicking outside the modal
+              await page.mouse.click(10, 10);
+              await page.waitForTimeout(500);
+            } else {
+              logger.info('✅ Cookie consent handled successfully');
+              return;
+            }
+          } catch (error) {
+            // Continue to next round
+          }
+        } else if (round === 0) {
+          // First round - wait a bit longer for modals to appear
+          await page.waitForTimeout(2000);
         }
       }
 
