@@ -25,7 +25,7 @@ class PlaywrightChrono24Service {
       logger.info('🎭 Initializing fresh Playwright browser...');
 
       // Check for debug mode
-      const isDebugMode = process.env.DEBUG_MODE === 'false';
+      const isDebugMode = process.env.DEBUG_MODE === 'true';
       const isProduction = process.env.NODE_ENV === 'production';
       const forceHeadless = process.env.HEADLESS === 'true';
 
