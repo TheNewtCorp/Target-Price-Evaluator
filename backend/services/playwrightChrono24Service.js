@@ -30,12 +30,15 @@ class PlaywrightChrono24Service {
       const forceHeadless = process.env.HEADLESS === 'true';
 
       logger.info(
-        `Browser config - Environment: ${isProduction ? 'Production' : 'Development'}, Debug: ${isDebugMode}, Headless: ${!isDebugMode && (isProduction || forceHeadless)}`,
+        `Browser config - Environment: ${isProduction ? 'Production' : 'Development'}, Debug: ${isDebugMode}, Headless: ${shouldRunHeadless}, Enhanced Stealth: ${shouldRunHeadless ? 'Enabled' : 'Basic'}`,
       );
+
+      // Enhanced headless stealth for production environments
+      const shouldRunHeadless = (isProduction && !process.env.FORCE_HEADFUL) || forceHeadless;
 
       browser = await chromium.launch({
         timeout: 60000, // 60 second timeout
-        headless: !isDebugMode && (isProduction || forceHeadless),
+        headless: shouldRunHeadless,
         slowMo: isDebugMode ? 100 : 0, // Slow down actions in debug mode
         args: [
           '--no-sandbox',
@@ -56,12 +59,28 @@ class PlaywrightChrono24Service {
           '--disable-dev-shm-usage',
           '--disable-gpu',
           '--window-size=1920,1080',
-          // Additional headless stealth args
+          // Enhanced headless stealth args
           '--disable-background-timer-throttling',
           '--disable-backgrounding-occluded-windows',
           '--disable-renderer-backgrounding',
           '--disable-features=TranslateUI,BlinkGenPropertyTrees',
           '--disable-ipc-flooding-protection',
+          '--exclude-switches=enable-automation',
+          '--disable-client-side-phishing-detection',
+          '--disable-sync',
+          '--metrics-recording-only',
+          '--no-report-upload',
+          '--disable-background-networking',
+          '--enable-features=NetworkService,NetworkServiceInProcess',
+          '--disable-features=ScriptStreaming',
+          '--force-color-profile=srgb',
+          '--disable-canvas-aa',
+          '--disable-2d-canvas-clip-aa',
+          '--disable-gl-drawing-for-tests',
+          // Production environment specific
+          ...(isProduction
+            ? ['--virtual-time-budget=5000', '--disable-background-mode', '--disable-default-apps']
+            : []),
         ],
       });
 
@@ -122,48 +141,108 @@ class PlaywrightChrono24Service {
       // Create a new page
       page = await context.newPage();
 
-      // Apply stealth measures using page.evaluate (more reliable than addInitScript)
-      await page.evaluate(() => {
-        // Remove webdriver properties
-        delete Object.getPrototypeOf(navigator).webdriver;
+      // Apply enhanced stealth measures (critical for headless mode in production)
+      await page.addInitScript(() => {
+        // Enhanced webdriver removal for headless environments
         Object.defineProperty(navigator, 'webdriver', {
           get: () => undefined,
         });
 
-        // Fix Chrome object - remove runtime (automation marker) but keep legitimate APIs
-        if (window.chrome && window.chrome.runtime) {
-          Object.defineProperty(window, 'chrome', {
-            get: () => ({
-              loadTimes: function () {
-                return {
-                  connectionInfo: 'http/1.1',
-                  finishDocumentLoadTime: Date.now() / 1000,
-                  finishLoadTime: Date.now() / 1000,
-                  firstPaintAfterLoadTime: 0,
-                  firstPaintTime: Date.now() / 1000,
-                  navigationType: 'Other',
-                  npnNegotiatedProtocol: 'unknown',
-                  requestTime: (Date.now() - 1000) / 1000,
-                  startLoadTime: (Date.now() - 1000) / 1000,
-                  wasAlternateProtocolAvailable: false,
-                  wasFetchedViaSpdy: false,
-                  wasNpnNegotiated: false,
-                };
-              },
-              csi: function () {
-                return {
-                  pageT: Date.now(),
-                  startE: Date.now() - 1000,
-                  tran: 15,
-                };
-              },
-              app: {},
-              // Deliberately NOT including 'runtime' - this is the key fix
-            }),
-            enumerable: true,
-            configurable: true,
-          });
-        }
+        // More aggressive webdriver removal
+        delete navigator.__proto__.webdriver;
+        delete Object.getPrototypeOf(navigator).webdriver;
+
+        // Override automation detection properties
+        Object.defineProperty(window, 'navigator', {
+          value: new Proxy(navigator, {
+            has: (target, key) => (key === 'webdriver' ? false : key in target),
+            get: (target, key) => (key === 'webdriver' ? undefined : target[key]),
+          }),
+        });
+
+        // Fix Chrome object - critical for headless detection
+        Object.defineProperty(window, 'chrome', {
+          writable: true,
+          enumerable: true,
+          configurable: true,
+          value: {
+            loadTimes: function () {
+              return {
+                connectionInfo: 'http/1.1',
+                finishDocumentLoadTime: Date.now() / 1000,
+                finishLoadTime: Date.now() / 1000,
+                firstPaintAfterLoadTime: 0,
+                firstPaintTime: Date.now() / 1000,
+                navigationType: 'Other',
+                npnNegotiatedProtocol: 'unknown',
+                requestTime: (Date.now() - 1000) / 1000,
+                startLoadTime: (Date.now() - 1000) / 1000,
+                wasAlternateProtocolAvailable: false,
+                wasFetchedViaSpdy: false,
+                wasNpnNegotiated: false,
+              };
+            },
+            csi: function () {
+              return {
+                pageT: Date.now(),
+                startE: Date.now() - 1000,
+                tran: 15,
+              };
+            },
+            app: {},
+            // Deliberately NOT including 'runtime' - this is the key fix
+          },
+        });
+
+        // Override plugins for headless detection resistance
+        Object.defineProperty(navigator, 'plugins', {
+          get: () => [
+            {
+              name: 'PDF Viewer',
+              description: 'Portable Document Format',
+              filename: 'internal-pdf-viewer',
+              length: 2,
+            },
+            {
+              name: 'Chrome PDF Viewer',
+              description: 'Portable Document Format',
+              filename: 'internal-pdf-viewer',
+              length: 2,
+            },
+            {
+              name: 'Chromium PDF Viewer',
+              description: 'Portable Document Format',
+              filename: 'internal-pdf-viewer',
+              length: 2,
+            },
+          ],
+        });
+
+        // Override languages
+        Object.defineProperty(navigator, 'languages', {
+          get: () => ['en-US', 'en'],
+        });
+
+        // Mock permissions API
+        const originalQuery = window.navigator.permissions.query;
+        window.navigator.permissions.query = (parameters) => {
+          return parameters.name === 'notifications'
+            ? Promise.resolve({ state: Notification.permission })
+            : originalQuery(parameters);
+        };
+
+        // Hide headless indicators
+        Object.defineProperty(navigator, 'platform', {
+          get: () => 'Win32',
+        });
+
+        // Mock WebGL for headless detection resistance
+        const getParameter = WebGLRenderingContext.getParameter;
+        WebGLRenderingContext.prototype.getParameter = function (parameter) {
+          if (parameter === 37445) return 'Intel Inc.'; // VENDOR
+          if (parameter === 37446) return 'Intel(R) UHD Graphics 630'; // RENDERER
+          return getParameter(parameter);
+        };
       });
 
       // Set up timeout for browser cleanup to prevent memory leaks
